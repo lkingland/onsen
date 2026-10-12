@@ -1,0 +1,144 @@
+# Onsen packages: what this edition installs beyond stock Quattro, and what
+# it takes away. A machine's package set is Quattro's install lists for its
+# platform (install/omarchy-base.packages and the rest) plus the lines here,
+# minus the "-" lines. onsen update installs what is missing, removes the "-"
+# lines, and stops at its drift check on any explicitly installed package
+# that neither Quattro's lists nor this file declare.
+#
+# One package per line. "-name" removes a package. "aur:name" comes from the
+# AUR (through yay, as Quattro installs AUR packages). "local:name" is built
+# and installed by hand from its own checkout: declared, so it is not drift,
+# never installed from here, and named when it is missing. Every other line
+# comes from the repositories, so a typo fails instead of reaching the AUR.
+# A "# reason" may follow on the same line.
+#
+# Quattro's lists here mean install/omarchy-base.packages,
+# omarchy-x86_64-only.packages, and omarchy-other.packages (the installer's
+# own base system and the hardware drivers it picks per machine, including
+# the linux-omarchy kernel).
+
+# --- Base system the installer adds outside Quattro's lists ------------------
+# The first sync after a fresh install names any other installer package
+# missing here.
+amd-ucode            # AMD CPU microcode
+omarchy-keyring      # omarchy-update-keyring installs it explicitly when missing
+efibootmgr           # the installer's UEFI boot entry
+mkinitcpio           # the installer's initramfs
+sudo                 # the installer's privilege escalation
+
+# --- Removed from stock --------------------------------------------------------
+-omarchy-nvim        # the LazyVim starter; config/nvim replaces it
+neovim               # was pulled in by omarchy-nvim
+# Stock 4.0.4 shipped these; upstream has since dropped them (Signed replaces
+# Xournal++, disktree replaces dua), so a machine installed from that ISO
+# carries them as leftovers.
+-kdenlive
+-xournalpp
+-dua-cli
+-tensaku             # replaced by omasnap (migration 1788129995); the drift check runs before migrations, so a fresh ISO install needs it here
+
+# --- Shell -----------------------------------------------------------------------
+atuin                # history; config/atuin, the database in ~/state
+bash-preexec         # the hook atuin needs in bash
+
+# --- YubiKey -----------------------------------------------------------------------
+pcsclite             # smartsocket and scdaemon talk to the card through pcscd
+ccid
+yubikey-manager
+pam-u2f              # touch-to-sudo (omarchy-setup-security-fido2)
+
+# --- Version control and review ----------------------------------------------------
+jujutsu
+git-delta
+difftastic
+github-cli
+tea
+aur:hunk-bin
+
+# --- Languages and builds ------------------------------------------------------------
+go                   # Hamr, the curator, smartsocket
+rustup
+bun-bin
+clang
+llvm
+python-pip
+jdk21-openjdk
+gradle
+kotlin
+
+# --- Android (hamr-android) -------------------------------------------------------------
+aur:android-sdk
+aur:android-sdk-cmdline-tools-latest
+android-tools
+jadx
+
+# --- Network and infrastructure ------------------------------------------------------------
+tailscale
+syncthing
+mosh
+bind                 # dig
+httpie
+websocat
+yq
+kubectl
+terraform
+tflint
+podman
+lazydocker
+aur:linode-cli       # config/bash/tools wraps it
+aur:nak-bin          # nostr CLI
+
+# --- Secrets ---------------------------------------------------------------------------------
+bitwarden
+bitwarden-cli        # config/bash/tools reads tokens through bw
+veracrypt
+
+# --- Fleet services -----------------------------------------------------------------------------
+protonmail-bridge-core
+python-pytorch-opt-rocm   # hamr-detect on the GPU
+python-torchvision
+perl-image-exiftool  # the curator
+ollama-rocm          # the embedder; runs CPU-only today (HIP hidden), ROCm keeps the GPU an option
+sunshine             # game streaming to Moonlight; its ports open on the tailnet only
+
+# --- Dictation --------------------------------------------------------------------------------
+voxtype-bin          # local Whisper dictation; migration 1791972925 runs omarchy-install-dictation-voxtype once (model, user unit)
+wtype                # types the dictated words; omarchy-install-dictation-voxtype adds it
+
+# --- Gaming ---------------------------------------------------------------------------------------
+# What omarchy install steam installs; none of it is in Quattro's lists, so
+# without these lines the installer's work reads as drift.
+steam
+gamemode
+lib32-gamemode
+mangohud
+lib32-mangohud
+gamescope
+lib32-vulkan-radeon  # the 32-bit Vulkan driver Steam's games need on this GPU
+
+# --- Desktop apps -----------------------------------------------------------------------------------
+ghostty              # a terminal the edition keeps; config/ghostty is its config
+brave-bin            # Brave, the default browser; migration 1791972924 runs omarchy-install-browser brave once (Wayland flags, policies, Widevine, theme) and makes it the default
+signal-desktop
+slack-desktop
+claude-desktop
+spotify
+obs-studio
+
+# --- Tools ---------------------------------------------------------------------------------------------
+dust
+duf
+tree
+strace
+nvtop
+usbutils
+dmidecode
+gptfdisk
+libinput-tools
+wev
+pandoc-cli
+codespell
+cups-pdf             # a Print to PDF printer
+
+# --- Built by hand from their own checkouts ----------------------------------
+local:onsen-matrix   # the screensaver: ~/src/kingland.io/onsen-matrix, makepkg -D pkg -si

@@ -1,0 +1,16 @@
+# Onsen services: units onsen update enables (and starts) on every run,
+# after the declared packages are installed, so the package that ships a
+# unit is always there first. A unit disabled by hand is enabled again; one
+# that is enabled but not running is started.
+#
+# One unit per line: "user <unit>" for the user manager, "system <unit>" for
+# the system one. A "# reason" may follow on the same line.
+
+system pcscd.socket                            # the YubiKey: scdaemon reaches the card only through pcscd
+system tailscaled.service                      # the tailnet, which SSH in and Sunshine listen on
+user syncthing.service                         # the home folders to cumulus
+user podman.socket                             # rootless Podman's Docker-compatible API
+user app-dev.lizardbyte.app.Sunshine.service   # Sunshine (the unit its package ships); its ports open on the tailnet only (migration 1791864400)
+user omarchy-tailscale-receive.service         # Taildrop into ~/Downloads, as omarchy install service tailscale enables it
+user omarchy-bluetooth-reconnect.service       # pages trusted keyboards and trackpads (config/systemd/user); bluez never retries HID
+system ollama.service                          # the hamr-memory embedder, CPU-only (etc/systemd/system/ollama.service.d)
