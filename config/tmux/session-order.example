@@ -1,0 +1,14 @@
+# Pinned tmux session order — sessions listed here appear first in `prefix f`
+# and `prefix s N`, in the order given. Sessions not listed sort alphabetically
+# after the pinned ones. Sessions that don't currently exist are skipped.
+#
+# Lines starting with `#` and blank lines are ignored. One name per line.
+#
+# This is a TEMPLATE. To activate, copy to `session-order` (same directory)
+# and edit to taste:
+#     cp ~/.config/tmux/session-order.example ~/.config/tmux/session-order
+#
+# The pin list is intentionally machine-local — it's NOT tracked in the
+# omarchy repo so each machine can have its own session layout.
+
+main
