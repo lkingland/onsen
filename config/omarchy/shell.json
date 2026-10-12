@@ -5,7 +5,8 @@
     "lock": 300
   },
   "bar": {
-    "position": "top",
+    "overlay": true,
+    "position": "bottom",
     "background": "opaque",
     "layout": {
       "left": [
