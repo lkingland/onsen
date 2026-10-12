@@ -1,0 +1,26 @@
+#!/bin/bash
+# Build a `tmux display-menu` invocation from the ordered session list,
+# binding 1-9, 0 to the first 10 sessions for single-key selection.
+# Sessions beyond the 10th are still selectable via arrow keys.
+#
+# Used by tmux.conf for `prefix f`.
+
+set -euo pipefail
+
+mapfile -t sessions < <(~/.config/tmux/sessions-ordered)
+
+args=()
+# Keys: 1..9 then 0 (matches `prefix s 1-9,0` semantics)
+keys=(1 2 3 4 5 6 7 8 9 0)
+for i in "${!sessions[@]}"; do
+    name="${sessions[$i]}"
+    key="${keys[$i]:-}"
+    if [[ -n "$key" ]]; then
+        args+=("$name" "$key" "switch-client -t \"$name\"")
+    else
+        # Beyond 10 sessions: leave the key unbound, still selectable by arrows
+        args+=("$name" "" "switch-client -t \"$name\"")
+    fi
+done
+
+tmux display-menu -T "#[align=centre]Sessions" "${args[@]}"
