@@ -1,0 +1,62 @@
+# onsen update's drift check: paths it manages that are not hand edits.
+# One glob per line, matched against the path below $HOME, as in
+# .config/tmux/session-order (a directory is matched as "dir/"; * also
+# crosses /).
+# A match is never reported as drift. If /etc/skel ships it, onsen update
+# seeds it once when it is missing and then leaves it to its owner.
+# Every entry needs a reason. This list is reviewed like any other change.
+
+# Apps that write their own state next to the one file /etc/skel seeds.
+.config/chromium/Default/*
+.config/obsidian/*
+.config/fcitx5/*
+
+# Written by Omarchy itself: first-run (enable-user-units.sh,
+# omarchy-provision-first-run) and migrations 1786549201 and 1789764927.
+.config/omarchy/hooks/post-update.d/setup-agent.hook
+.config/omarchy/hooks/post-update.d/setup-fingerprint.hook
+.config/omarchy/hooks/theme-set.d/10-owe-sync
+.config/omarchy/extensions/menu.sh
+
+# Omarchy's theme and plugin system writes these trees (themes installed or
+# generated, plugins added, btop's copy of the current theme).
+.config/omarchy/themes/*
+# The per-theme user background folders, where the switcher also looks.
+.config/omarchy/backgrounds/*
+.config/omarchy/plugins/*
+.config/btop/themes/*
+
+# The tmux session pins: the operator's list, edited in place (see
+# config/tmux/session-order.example).
+.config/tmux/session-order
+
+# TPM installs its plugins here (config/tmux/tmux.conf names them).
+.config/tmux/plugins/*
+
+# btop rewrites its config on every launch (version header, new options).
+.config/btop/btop.conf
+
+# jj keeps per-repository and per-workspace config under its config directory.
+.config/jj/repos/*
+.config/jj/workspaces/*
+
+# The shell rewrites shell.json as it starts (widget defaults, JSON
+# normalisation), so the edition's copy seeds it once: the bar's position and
+# overlay. A later change to the bar goes in by hand or omarchy bar.
+.config/omarchy/shell.json
+
+# omarchy-dictation-use (and its kin) take a lock beside the default they write.
+.config/omarchy/defaults/*.lock
+
+# systemd's user unit directory is shared with everything that enables or
+# installs a user unit: systemctl enable writes *.wants/ links and a unit's
+# Alias= link (sunshine.service), smartsocket masks gpg-agent's own units
+# with links to /dev/null, and voxtype setup writes its unit. The edition's
+# own units there (omarchy-bluetooth-reconnect.service, the gpg-agent-local
+# drop-in) stay managed.
+.config/systemd/user/*.wants/
+.config/systemd/user/gpg-agent.service
+.config/systemd/user/gpg-agent.socket
+.config/systemd/user/gpg-agent-ssh.socket
+.config/systemd/user/sunshine.service
+.config/systemd/user/voxtype.service
