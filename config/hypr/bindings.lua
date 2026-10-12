@@ -25,3 +25,31 @@
 -- Logitech MX Keys examples:
 -- o.bind("SUPER + H", nil, "voxtype record toggle")
 -- o.bind("SUPER + PERIOD", nil, { panel = "omarchy.emojis" })
+
+-- Onsen: vim keys. H J K L focus a window, Shift + H J K L move it.
+-- J was the split toggle, now Ctrl + J. K was the keybindings menu, now
+-- Shift + Ctrl + K (Ctrl + K stays Herdr). L was the workspace-layout
+-- cycle, which loses its key, and Alt + L with it. Q, a second close, is
+-- the previous workspace and E the next on this monitor, as Super + Tab is
+-- upstream; W still closes. Super + number is upstream's too: each monitor
+-- has workspaces 1-10 of its own (default/hypr/monitor-workspaces.lua).
+o.rebind("SUPER + Q", "Previous workspace", hl.dsp.focus({ workspace = "m-1" }))
+o.bind("SUPER + E", "Next workspace", hl.dsp.focus({ workspace = "m+1" }))
+o.rebind("SUPER + J", "Focus on below window", hl.dsp.focus({ direction = "d" }))
+o.bind("SUPER + CTRL + J", "Toggle window split", hl.dsp.layout("togglesplit"))
+o.rebind("SUPER + K", "Focus on above window", hl.dsp.focus({ direction = "u" }))
+o.bind("SUPER + SHIFT + CTRL + K", "Keybindings", "omarchy-menu-keybindings")
+o.rebind("SUPER + L", "Focus on right window", hl.dsp.focus({ direction = "r" }))
+hl.unbind("SUPER + ALT + L")
+o.bind("SUPER + H", "Focus on left window", hl.dsp.focus({ direction = "l" }))
+o.bind("SUPER + SHIFT + H", "Move window left", hl.dsp.window.move({ direction = "l" }))
+o.bind("SUPER + SHIFT + J", "Move window down", hl.dsp.window.move({ direction = "d" }))
+o.bind("SUPER + SHIFT + K", "Move window up", hl.dsp.window.move({ direction = "u" }))
+o.bind("SUPER + SHIFT + L", "Move window right", hl.dsp.window.move({ direction = "r" }))
+
+-- Super + Ctrl + number focuses monitor N (Hyprland's ids, in enumeration
+-- order, from 1), the pair to Super + number being a workspace on a monitor.
+-- Stock has these open the bar's panels by position; the letter binds remain.
+for index = 1, 9 do
+  o.rebind("SUPER + CTRL + code:" .. tostring(index + 9), "Focus monitor " .. index, hl.dsp.focus({ monitor = tostring(index - 1) }))
+end

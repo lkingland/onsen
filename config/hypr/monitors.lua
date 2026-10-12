@@ -3,9 +3,19 @@
 
 -- Monitor scale is Hyprland's scale for the output. It sizes everything
 -- Wayland-native, accepts fractions (1.6, 1.75), and applies immediately.
--- "auto" lets Hyprland pick per display.
-local omarchy_monitor_scale = "auto"
-hl.monitor({ output = "", mode = "preferred", position = "auto", scale = omarchy_monitor_scale })
+-- "auto" lets Hyprland pick per display. These desks are 42" 4K TVs, and
+-- 1.25 is the step up from 1.
+local omarchy_monitor_scale = "1.25"
+-- The TVs do 120 Hz over HDMI 2.1 but report 60 Hz as preferred, so the mode
+-- is named. The DisplayPort output is enumerated first and feeds the right
+-- desk, the one the firmware shows boot on; auto-left places each later
+-- output to the left of it, so the HDMI desk lands where it stands with no
+-- connector named here.
+hl.monitor({ output = "", mode = "3840x2160@120", position = "auto-left", scale = omarchy_monitor_scale })
+-- The JetKVM on the second DisplayPort output: its own 1080p screen at scale
+-- 1, placed to the left like any later output. Matched by description, so it
+-- follows the KVM and not the port.
+hl.monitor({ output = "desc:JET POWER TECHNOLOGY CO. LTD. JetKVM v1 0xC0FFEE01", mode = "1920x1080@60", position = "auto-left", scale = 1 })
 
 -- Configure a specific monitor.
 -- hl.monitor({ output = "DP-2", mode = "2560x1440@144", position = "0x0", scale = 1 })

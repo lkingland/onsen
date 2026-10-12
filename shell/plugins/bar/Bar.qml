@@ -59,6 +59,9 @@ Item {
   // The look the blur behind the bar was last synced for. A background set by
   // editing shell.json skips the CLI, so the bar syncs Hyprland's blur itself.
   property string glassSyncedLook: ""
+  // bar.overlay: the bar floats above windows and never reserves its strip,
+  // so showing or hiding it does not move tiled windows (Onsen deviation).
+  property bool overlay: false
   // One bar surface exists per monitor and each reports into this count, so a
   // pointer crossing from one monitor's bar to another's stays counted however
   // the enter and leave interleave. A single shared bool would be left false by
@@ -749,6 +752,7 @@ Item {
       glassSyncedLook = look
       Util.execDetached("omarchy-bar sync-glass")
     }
+    overlay = config.overlay === true
 
     // Each widget keeps its key while it stays in the layout, wherever it
     // moves and whatever its settings, so a config write builds just the
@@ -1542,7 +1546,7 @@ Item {
     // instead of growing once the windows are laid out. The wait ends once, for
     // good: when the mode settles it, or after two seconds without one.
     visible: !remapGuard.remapping && (cutoutWaitOver || !cutoutPending)
-    exclusionMode: root.barHidden ? ExclusionMode.Ignore : ExclusionMode.Auto
+    exclusionMode: root.barHidden || root.overlay ? ExclusionMode.Ignore : ExclusionMode.Auto
 
     ScreenMoveRemap {
       id: remapGuard
