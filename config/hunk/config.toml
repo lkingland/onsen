@@ -1,0 +1,63 @@
+# Fixed Onsen palette. theme = "custom" does not follow the active Omarchy theme.
+
+theme = "custom"
+
+[custom_theme]
+base = "github-dark"   # inherit any keys we don't override
+label = "Onsen"
+
+# ── Chrome — OLED-black, very faint monochromatic green for static UI ──
+background   = "#000000"   # main canvas: pure OLED black
+panel        = "#060F0A"   # static panels: a whisper of green
+panelAlt     = "#0A150E"   # secondary panel / header strip
+border       = "#18301F"   # quiet green-grey separators
+text         = "#E0E0E0"   # primary foreground
+muted        = "#707070"   # secondary text
+accent       = "#8FD9A8"   # onsen green — active borders, cursor, focus
+accentMuted  = "#4F8268"
+lineNumberBg = "#000000"
+lineNumberFg = "#5A6B60"   # greenish-grey gutter
+
+# ── Diff content — onsen green-add / red-remove (faint blocks, OLED) ──
+addedBg          = "#08210F"   # added line: whisper-green block
+addedContentBg   = "#143A23"   # changed tokens on an added line: brighter green
+addedSignColor   = "#8FD9A8"   # the + marker
+removedBg        = "#1B0909"   # removed line: whisper-red block
+removedContentBg = "#5E1F1F"   # changed tokens on a removed line: brighter red
+removedSignColor = "#FF6B6B"   # the - marker
+contextBg        = "#000000"   # unchanged lines: no background
+contextContentBg = "#000000"
+movedAddedBg     = "#0E1A2E"   # moved-line detection: faint blue
+movedRemovedBg   = "#14132A"   # faint indigo
+selectedHunk     = "#102A1C"   # current/selected hunk highlight
+
+# ── Badges & file-tree status ──
+badgeAdded    = "#8FD9A8"
+badgeRemoved  = "#FF6B6B"
+badgeNeutral  = "#808080"
+fileNew       = "#8FD9A8"   # green
+fileModified  = "#FF9E50"   # orange
+fileDeleted   = "#FF6B6B"   # red
+fileRenamed   = "#A8C4F7"   # blue
+fileUntracked = "#707070"   # grey
+
+# ── Modals / agent-notes — slightly more robust green ──
+noteBackground      = "#0D1F15"   # onsen active-tab green
+noteBorder          = "#3E7E5C"
+noteTitleBackground = "#143524"
+noteTitleText       = "#A8E4BC"   # bright green
+
+# ── Syntax — onsen's actual treesitter palette (blue keywords, cyan strings,
+#    grey comments, neutral functions/vars, green types/constants) ──
+[custom_theme.syntax]
+keyword     = "#A8C4F7"   # blue — structure
+string      = "#88CCCC"   # cyan — data
+comment     = "#606060"
+function    = "#E0E0E0"   # neutral fg (onsen keeps these quiet)
+variable    = "#E0E0E0"
+number      = "#E0E0E0"
+operator    = "#B0B0B0"   # dimmed
+punctuation = "#808080"
+type        = "#8FD9A8"   # green
+constant    = "#8FD9A8"   # green
+property    = "#88CCCC"   # cyan — fields/members

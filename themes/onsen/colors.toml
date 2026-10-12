@@ -1,0 +1,45 @@
+# Onsen - OLED pastel green/blue theme (Quattro schema)
+# Philosophy: monochromatic pastel green base with blue for structure,
+# orange for warnings, and red for errors only. Pure black for OLED.
+#
+#   Green  #8FD9A8  behavior, data, success, variables (accent)
+#   Blue   #A8C4F7  structure, keywords, directories
+#   Orange #FF9E50  warnings, attention (Onsen has no yellow: yellow = orange)
+#   Red    #FF6B6B  errors only
+#
+# Onsen has no purple either: magenta/purple are the muted greens.
+
+mode = "dark"
+
+accent = "#8FD9A8"
+selection = "#1F3D2B"
+muted = "#606060"
+
+background = "#000000"
+dark_background = "#000000"
+darker_background = "#000000"
+lighter_background = "#0D1F15"
+
+foreground = "#E0E0E0"
+dark_foreground = "#B0B0B0"
+light_foreground = "#F0F0F0"
+bright_foreground = "#FFFFFF"
+
+red = "#FF6B6B"
+yellow = "#FF9E50"
+orange = "#FF9E50"
+green = "#8FD9A8"
+cyan = "#88CCCC"
+blue = "#A8C4F7"
+magenta = "#6BB88A"
+purple = "#6BB88A"
+brown = "#B07A4F"
+
+bright_red = "#FF8888"
+bright_yellow = "#FFBB77"
+bright_green = "#A8E4BC"
+bright_cyan = "#99DDDD"
+bright_blue = "#B8D4FF"
+bright_magenta = "#74C995"
+
+hyprland_active_border = "#8FD9A8"

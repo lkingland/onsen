@@ -1,0 +1,12 @@
+# Bat configuration - Onsen theme
+
+--theme="onsen"
+
+# Style: with grid, line numbers, git changes
+--style="numbers,changes,grid,header-filename,snip"
+
+# Enable italic text
+--italic-text=always
+
+# Disable paging for short files (less than a screenful)
+--paging=auto

@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>name</key>
+	<string>onsen</string>
+	<key>author</key>
+	<string>Onsen Theme</string>
+	<key>semanticClass</key>
+	<string>theme.dark.onsen</string>
+	<key>colorSpaceName</key>
+	<string>sRGB</string>
+
+	<!-- Gutter settings: line numbers and divider -->
+	<key>gutterSettings</key>
+	<dict>
+		<key>background</key>
+		<string>#000000</string>
+		<key>foreground</key>
+		<string>#606060</string>
+		<key>divider</key>
+		<string>#606060</string>
+		<key>selectionBackground</key>
+		<string>#0D1F15</string>
+		<key>selectionForeground</key>
+		<string>#8FD9A8</string>
+	</dict>
+
+	<key>settings</key>
+	<array>
+		<!-- Global settings -->
+		<dict>
+			<key>settings</key>
+			<dict>
+				<key>background</key>
+				<string>#000000</string>
+				<key>foreground</key>
+				<string>#E0E0E0</string>
+				<key>caret</key>
+				<string>#8FD9A8</string>
+				<key>selection</key>
+				<string>#0D1F15</string>
+				<key>selectionBorder</key>
+				<string>#8FD9A8</string>
+				<key>lineHighlight</key>
+				<string>#0A0A0A</string>
+				<key>findHighlight</key>
+				<string>#0D1F15</string>
+				<key>findHighlightForeground</key>
+				<string>#8FD9A8</string>
+				<key>gutterForeground</key>
+				<string>#606060</string>
+				<key>guide</key>
+				<string>#2D4055</string>
+				<key>activeGuide</key>
+				<string>#606060</string>
+				<key>invisibles</key>
+				<string>#404040</string>
+			</dict>
+		</dict>
+
+		<!-- Comments: grey -->
+		<dict>
+			<key>name</key>
+			<string>Comment</string>
+			<key>scope</key>
+			<string>comment, punctuation.definition.comment</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#606060</string>
+			</dict>
+		</dict>
+
+		<!-- Strings: white (data) -->
+		<dict>
+			<key>name</key>
+			<string>String</string>
+			<key>scope</key>
+			<string>string, string.quoted</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#E0E0E0</string>
+			</dict>
+		</dict>
+
+		<!-- Keywords: blue (structure) -->
+		<dict>
+			<key>name</key>
+			<string>Keyword</string>
+			<key>scope</key>
+			<string>keyword, keyword.control, keyword.operator.logical, storage.type, storage.modifier</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#A8C4F7</string>
+			</dict>
+		</dict>
+
+		<!-- Control flow: blue -->
+		<dict>
+			<key>name</key>
+			<string>Control Flow</string>
+			<key>scope</key>
+			<string>keyword.control.conditional, keyword.control.loop, keyword.control.flow</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#A8C4F7</string>
+			</dict>
+		</dict>
+
+		<!-- Variables: green (behavior) -->
+		<dict>
+			<key>name</key>
+			<string>Variable</string>
+			<key>scope</key>
+			<string>variable, variable.other, variable.parameter</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#8FD9A8</string>
+			</dict>
+		</dict>
+
+		<!-- Functions: green (behavior) -->
+		<dict>
+			<key>name</key>
+			<string>Function</string>
+			<key>scope</key>
+			<string>entity.name.function, support.function, meta.function-call</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#8FD9A8</string>
+			</dict>
+		</dict>
+
+		<!-- Types: green italic -->
+		<dict>
+			<key>name</key>
+			<string>Type</string>
+			<key>scope</key>
+			<string>entity.name.type, entity.name.class, support.type, support.class</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#8FD9A8</string>
+				<key>fontStyle</key>
+				<string>italic</string>
+			</dict>
+		</dict>
+
+		<!-- Constants: green -->
+		<dict>
+			<key>name</key>
+			<string>Constant</string>
+			<key>scope</key>
+			<string>constant, constant.language, constant.character</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#8FD9A8</string>
+			</dict>
+		</dict>
+
+		<!-- Numbers: muted -->
+		<dict>
+			<key>name</key>
+			<string>Number</string>
+			<key>scope</key>
+			<string>constant.numeric</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#B0B0B0</string>
+			</dict>
+		</dict>
+
+		<!-- Operators: white -->
+		<dict>
+			<key>name</key>
+			<string>Operator</string>
+			<key>scope</key>
+			<string>keyword.operator, punctuation</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#E0E0E0</string>
+			</dict>
+		</dict>
+
+		<!-- Properties/attributes: green -->
+		<dict>
+			<key>name</key>
+			<string>Property</string>
+			<key>scope</key>
+			<string>variable.other.property, entity.other.attribute-name</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#8FD9A8</string>
+			</dict>
+		</dict>
+
+		<!-- Tags (HTML/XML): blue -->
+		<dict>
+			<key>name</key>
+			<string>Tag</string>
+			<key>scope</key>
+			<string>entity.name.tag, punctuation.definition.tag</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#A8C4F7</string>
+			</dict>
+		</dict>
+
+		<!-- Escape characters: orange -->
+		<dict>
+			<key>name</key>
+			<string>Escape</string>
+			<key>scope</key>
+			<string>constant.character.escape</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#FF9E50</string>
+			</dict>
+		</dict>
+
+		<!-- Invalid/Error: red -->
+		<dict>
+			<key>name</key>
+			<string>Invalid</string>
+			<key>scope</key>
+			<string>invalid, invalid.illegal</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#FF6B6B</string>
+			</dict>
+		</dict>
+
+		<!-- Deprecated: orange -->
+		<dict>
+			<key>name</key>
+			<string>Deprecated</string>
+			<key>scope</key>
+			<string>invalid.deprecated</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#FF9E50</string>
+			</dict>
+		</dict>
+
+		<!-- Diff: inserted (green) -->
+		<dict>
+			<key>name</key>
+			<string>Diff Inserted</string>
+			<key>scope</key>
+			<string>markup.inserted, meta.diff.header.to-file</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#8FD9A8</string>
+			</dict>
+		</dict>
+
+		<!-- Diff: deleted (red) -->
+		<dict>
+			<key>name</key>
+			<string>Diff Deleted</string>
+			<key>scope</key>
+			<string>markup.deleted, meta.diff.header.from-file</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#FF6B6B</string>
+			</dict>
+		</dict>
+
+		<!-- Diff: changed (orange) -->
+		<dict>
+			<key>name</key>
+			<string>Diff Changed</string>
+			<key>scope</key>
+			<string>markup.changed</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#FF9E50</string>
+			</dict>
+		</dict>
+
+		<!-- Markdown headings: blue -->
+		<dict>
+			<key>name</key>
+			<string>Markdown Heading</string>
+			<key>scope</key>
+			<string>markup.heading, entity.name.section</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#A8C4F7</string>
+				<key>fontStyle</key>
+				<string>bold</string>
+			</dict>
+		</dict>
+
+		<!-- Markdown bold -->
+		<dict>
+			<key>name</key>
+			<string>Markdown Bold</string>
+			<key>scope</key>
+			<string>markup.bold</string>
+			<key>settings</key>
+			<dict>
+				<key>fontStyle</key>
+				<string>bold</string>
+			</dict>
+		</dict>
+
+		<!-- Markdown italic -->
+		<dict>
+			<key>name</key>
+			<string>Markdown Italic</string>
+			<key>scope</key>
+			<string>markup.italic</string>
+			<key>settings</key>
+			<dict>
+				<key>fontStyle</key>
+				<string>italic</string>
+			</dict>
+		</dict>
+
+		<!-- Markdown link: blue -->
+		<dict>
+			<key>name</key>
+			<string>Markdown Link</string>
+			<key>scope</key>
+			<string>markup.underline.link, string.other.link</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#A8C4F7</string>
+			</dict>
+		</dict>
+
+		<!-- Markdown code: green -->
+		<dict>
+			<key>name</key>
+			<string>Markdown Code</string>
+			<key>scope</key>
+			<string>markup.raw, markup.inline.raw</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#8FD9A8</string>
+			</dict>
+		</dict>
+
+	</array>
+
+	<key>uuid</key>
+	<string>onsen-theme-001</string>
+</dict>
+</plist>

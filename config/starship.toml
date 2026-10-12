@@ -1,32 +1,187 @@
+# Starship prompt
+# Onsen theme with jj/git, kubernetes, and hostname support
+palette = "onsen"
+
 add_newline = true
-command_timeout = 200
-format = "[$directory$git_branch$git_status]($style)$character"
+command_timeout = 500
 
+# Two-line prompt: info on line 1, input on line 2
+# Right prompt: kubernetes context (hostname moved to tmux status bar)
+format = """
+$directory\
+$custom\
+$git_branch\
+$git_status\
+$cmd_duration\
+$fill\
+$kubernetes\
+$line_break\
+$character"""
+
+# Alternative: single line (uncomment if preferred)
+# format = "$directory$custom$git_branch$git_status$cmd_duration$character"
+
+right_format = ""
+
+[palettes.onsen]
+green = "#8FD9A8"        # Pastel green (behavior, success)
+blue = "#A8C4F7"         # Pastel blue (structure)
+blue_dark = "#2D4055"    # Dark blue (subtle)
+orange = "#FF9E50"       # Warnings, duration
+red = "#FF6B6B"          # Errors
+fg = "#E0E0E0"           # Primary text
+fg_dark = "#B0B0B0"      # Dimmed text
+comment = "#606060"      # De-emphasized
+
+# -------------------------
+# Prompt character (line 2)
+# -------------------------
+# Character disabled - nushell handles vi mode indicators
 [character]
-error_symbol = "[✗](bold cyan)"
-success_symbol = "[❯](bold cyan)"
+disabled = true
 
+# -------------------------
+# Directory
+# -------------------------
 [directory]
-truncation_length = 2
+truncation_length = 3
 truncation_symbol = "…/"
-repo_root_style = "bold cyan"
+style = "blue"
+repo_root_style = "bold blue"
 repo_root_format = "[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) "
+read_only = " 󰌾"
+read_only_style = "red"
+home_symbol = "~"
 
+# -------------------------
+# Jujutsu (jj) - custom module, takes priority over git
+# --ignore-working-copy: never snapshot from the prompt (a snapshot signs, and
+# signing waits on the card PIN; a prompt must never block).
+# Shows: branch/change @ commit, with status indicators
+# -------------------------
+[custom.jj]
+description = "Jujutsu VCS status"
+command = "jj --ignore-working-copy log -r @ --no-graph -T 'concat(if(bookmarks, bookmarks ++ \" \"), change_id.shortest(4), if(conflict, \" ⚠\"), if(empty, \" ∅\"), if(divergent, \" ⑂\"))' 2>/dev/null"
+detect_folders = [".jj"]
+# detect_folders only matches the current directory. `when` is OR'd with it,
+# and --ignore-working-copy keeps the probe from snapshotting.
+when = "jj --ignore-working-copy workspace root"
+shell = "bash"
+style = "green"
+format = "[$output]($style) "
+
+# -------------------------
+# Git branch (shown in non-jj repos, or alongside jj in colocated repos)
+# In colocated repos, this shows the underlying git branch which can be useful
+# -------------------------
 [git_branch]
-format = "[$branch]($style) "
-style = "italic cyan"
+format = "[$symbol$branch(:$remote_branch)]($style) "
+style = "italic comment"
+symbol = ""
+ignore_branches = []
 
+# -------------------------
+# Git status
+# -------------------------
 [git_status]
-format     = '[$all_status]($style)'
-style      = "cyan"
-ahead      = "⇡${count} "
-diverged   = "⇕⇡${ahead_count}⇣${behind_count} "
-behind     = "⇣${count} "
-conflicted = " "
-up_to_date = " "
-untracked  = "? "
-modified   = " "
-stashed    = ""
-staged     = ""
-renamed    = ""
-deleted    = ""
+format = '([$all_status$ahead_behind]($style))'
+style = "green"
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+conflicted = "="
+untracked = "?"
+modified = "!"
+staged = "+"
+renamed = "»"
+deleted = "✘"
+stashed = "\\$"
+
+# -------------------------
+# Command duration (only if >2s)
+# -------------------------
+[cmd_duration]
+min_time = 2000
+format = "[$duration]($style) "
+style = "orange"
+show_notifications = false
+
+# -------------------------
+# Fill (pushes right-side content to the right)
+# -------------------------
+[fill]
+symbol = " "
+
+# -------------------------
+# Kubernetes context (right side)
+# Only shows when kubeconfig exists and context is set
+# -------------------------
+[kubernetes]
+disabled = false
+format = '[$symbol$context( \($namespace\))]($style) '
+style = "blue"
+symbol = "⎈ "
+detect_files = []
+detect_folders = []
+# Show specific contexts differently
+contexts = []
+
+[kubernetes.context_aliases]
+# Add aliases for long context names, e.g.:
+# "arn:aws:eks:us-east-1:123456789:cluster/my-cluster" = "my-cluster"
+
+# -------------------------
+# Hostname (right side, only when SSH'd)
+# -------------------------
+[hostname]
+ssh_only = true
+format = "[$ssh_symbol$hostname]($style)"
+style = "bold comment"
+ssh_symbol = " "
+disabled = false
+
+# -------------------------
+# Status (exit code) - encoded in character color, but can show code
+# -------------------------
+[status]
+disabled = true
+format = '[\[$status\]]($style) '
+style = "red"
+
+# -------------------------
+# Jobs (background jobs indicator)
+# -------------------------
+[jobs]
+disabled = false
+symbol = "✦"
+style = "bold blue"
+threshold = 1
+format = "[$symbol$number]($style) "
+
+# -------------------------
+# Language/tool versions - only show when relevant
+# Minimalist: only show if project files detected
+# -------------------------
+[nodejs]
+disabled = true
+
+[python]
+disabled = true
+
+[rust]
+disabled = true
+
+[golang]
+disabled = true
+
+# -------------------------
+# Cloud contexts (disabled by default, enable as needed)
+# -------------------------
+[aws]
+disabled = true
+
+[gcloud]
+disabled = true
+
+[azure]
+disabled = true

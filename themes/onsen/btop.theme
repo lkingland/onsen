@@ -1,0 +1,60 @@
+# Onsen btop theme - Pastel green gradients
+
+theme[main_bg]="#000000"
+theme[main_fg]="#E0E0E0"
+theme[title]="#8FD9A8"
+theme[hi_fg]="#A8E4BC"
+theme[selected_bg]="#0D1F15"
+theme[selected_fg]="#A8E4BC"
+theme[inactive_fg]="#606060"
+theme[graph_text]="#B0B0B0"
+theme[meter_bg]="#0D1F15"
+theme[proc_misc]="#88CCCC"
+
+# Box outlines - pastel green/blue
+theme[cpu_box]="#8FD9A8"
+theme[mem_box]="#6BB88A"
+theme[net_box]="#74C995"
+theme[proc_box]="#8FD9A8"
+theme[div_line]="#606060"
+
+# Temperature gradient (green to red for high temps)
+theme[temp_start]="#6BB88A"
+theme[temp_mid]="#8FD9A8"
+theme[temp_end]="#FF6B6B"
+
+# CPU gradient - pastel green variations
+theme[cpu_start]="#1A3528"
+theme[cpu_mid]="#6BB88A"
+theme[cpu_end]="#A8E4BC"
+
+# Memory gradients - pastel green family
+theme[free_start]="#1A3528"
+theme[free_mid]="#6BB88A"
+theme[free_end]="#8FD9A8"
+
+theme[cached_start]="#6BB88A"
+theme[cached_mid]="#8FD9A8"
+theme[cached_end]="#A8E4BC"
+
+theme[available_start]="#74C995"
+theme[available_mid]="#8FD9A8"
+theme[available_end]="#A8E4BC"
+
+theme[used_start]="#1A3528"
+theme[used_mid]="#6BB88A"
+theme[used_end]="#8FD9A8"
+
+# Network gradients - pastel green family
+theme[download_start]="#6BB88A"
+theme[download_mid]="#8FD9A8"
+theme[download_end]="#A8E4BC"
+
+theme[upload_start]="#1A3528"
+theme[upload_mid]="#6BB88A"
+theme[upload_end]="#8FD9A8"
+
+# Process gradient - pastel green family
+theme[process_start]="#1A3528"
+theme[process_mid]="#6BB88A"
+theme[process_end]="#8FD9A8"

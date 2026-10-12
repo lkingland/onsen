@@ -26,3 +26,44 @@ email = "luke@lukekingland.com"
 behavior = "own"
 backend = "gpg"
 key = "7DB461E762F282F9!"
+
+
+# Onsen color theming
+# Green=identity/behavior, Cyan=structure, Grey=muted metadata, Red=errors
+[colors]
+# Primary identifiers - saturated green prefix, grey rest
+change_id = { fg = "#50D890", bold = true }
+"working_copy change_id" = { fg = "#50D890", bold = true }
+commit_id = { fg = "#50D890", bold = true }
+"working_copy commit_id" = { fg = "#50D890", bold = true }
+rest = { fg = "#505050", bold = false }
+
+# Structure - cyan (closest to pastel blue)
+bookmark = "cyan"
+bookmarks = "cyan"
+local_bookmarks = "cyan"
+remote_bookmarks = "cyan"
+tag = "cyan"
+tags = "cyan"
+git_ref = "cyan"
+git_refs = "cyan"
+git_head = "cyan"
+
+# Metadata
+author = { fg = "#8FD9A8" }
+committer = { fg = "#8FD9A8" }
+"working_copy author" = { fg = "#8FD9A8" }
+"working_copy committer" = { fg = "#8FD9A8" }
+timestamp = { fg = "#505050" }
+"working_copy timestamp" = { fg = "#505050" }
+
+# Status
+working_copies = "green"
+empty = "bright black"
+conflict = "red"
+conflict_description = "yellow"
+
+# Errors/warnings
+"error heading" = { fg = "red", bold = true }
+"warning heading" = { fg = "yellow", bold = true }
+"hint heading" = { fg = "cyan", bold = true }
