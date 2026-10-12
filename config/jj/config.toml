@@ -1,0 +1,28 @@
+#:schema https://docs.jj-vcs.dev/latest/config-schema.json
+
+[ui]
+# Default: git-style unified diff, syntax-highlighted via delta.
+# For structural/language-aware diff, use `jj ds <rev>` / `jj dd` (difftastic).
+# For interactive multi-file review, use `hunk show <rev>` / `hunk diff`.
+diff-formatter = ":git"
+pager = "delta"
+default-command = "log"
+
+[aliases]
+ds = ["show", "--tool", "difft"]
+dd = ["diff", "--tool", "difft"]
+
+[user]
+name = "Luke Kingland"
+email = "luke@lukekingland.com"
+
+# Sign every commit jj creates (snapshots included) with the YubiKey's OpenPGP
+# signing subkey — the same key git uses. The card's signature PIN is "not
+# forced", so one PIN entry per card session covers everything after it,
+# including agents committing as the operator in ~/src (that is deliberate:
+# external repos use the operator identity). Never the ssh backend: those
+# signatures need an allowed_signers file to verify.
+[signing]
+behavior = "own"
+backend = "gpg"
+key = "7DB461E762F282F9!"

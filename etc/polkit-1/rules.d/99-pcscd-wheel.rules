@@ -1,0 +1,12 @@
+// Allow members of the "wheel" group to access pcscd without requiring
+// an active logind session. gpg-agent/scdaemon are typically spawned
+// detached from any session (parent = systemd, no logind session), so
+// pcscd's default "implicit active: yes" check denies them — which
+// breaks YubiKey access via gpg/ssh. pcscd 2.4.x began enforcing this.
+polkit.addRule(function(action, subject) {
+    if ((action.id == "org.debian.pcsc-lite.access_pcsc" ||
+         action.id == "org.debian.pcsc-lite.access_card") &&
+        subject.isInGroup("wheel")) {
+        return polkit.Result.YES;
+    }
+});
