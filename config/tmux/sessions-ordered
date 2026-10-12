@@ -1,0 +1,37 @@
+#!/bin/bash
+# Emit tmux session names in a stable order:
+#   1. Pinned sessions (from ~/.config/tmux/session-order) in pin order, if they exist
+#   2. Remaining sessions, alphabetical
+#
+# Used by tmux.conf to drive `prefix f` (fzf picker) and `prefix s N` (jump-to-Nth).
+# Edit ~/.config/tmux/session-order to change pin order; one session name per line,
+# blank lines and `#` comments ignored.
+
+set -euo pipefail
+
+PIN_FILE="${PIN_FILE:-${HOME}/.config/tmux/session-order}"
+
+all=$(tmux list-sessions -F '#{session_name}' 2>/dev/null | LC_ALL=C sort)
+
+if [[ -f "$PIN_FILE" ]]; then
+    pins=$(grep -vE '^\s*(#|$)' "$PIN_FILE" || true)
+else
+    pins=""
+fi
+
+# Emit pinned (in pin order), skip ones that don't currently exist.
+seen=""
+while IFS= read -r pin; do
+    [[ -z "$pin" ]] && continue
+    if grep -qxF "$pin" <<< "$all"; then
+        echo "$pin"
+        seen+="${pin}"$'\n'
+    fi
+done <<< "$pins"
+
+# Emit unpinned (alphabetical), skipping anything already emitted.
+while IFS= read -r s; do
+    [[ -z "$s" ]] && continue
+    grep -qxF "$s" <<< "$seen" && continue
+    echo "$s"
+done <<< "$all"
