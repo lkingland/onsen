@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Reset Omarchy user configs and shipped defaults in $HOME (destructive)
+# omarchy:summary=Reset Omarchy user configs and shipped defaults in $HOME, leaving ssh and gpg (destructive)
 
 set -euo pipefail
 
@@ -10,13 +10,24 @@ if (( EUID == 0 )); then
 fi
 
 echo "Resetting Omarchy user configs to shipped defaults..."
+echo "Leaving ~/.ssh and ~/.gnupg in place."
 
 # /etc/skel is the same tree useradd -m copies to seed a fresh user's $HOME.
 # Replaying it over an existing user resyncs every package-shipped user
 # default in one pass: .bashrc, .config/**, .local/share/applications,
 # nautilus-python extensions, branding, hypr toggles, and migration markers.
 # Trailing dot copies dotfiles; the shell wouldn't glob them with /etc/skel/*.
-cp -af /etc/skel/. ~/
+#
+# ~/.ssh and ~/.gnupg hold the YubiKey setup and the machine's keys. The
+# edition's files in them are onsen update's to keep, with a record of what
+# it wrote; this replay has no record and would clobber. Drop them from a
+# copy of skel before the replay, so this never writes them and never has to
+# move the live directories.
+stage=$(mktemp -d)
+trap 'rm -rf "$stage"' EXIT
+cp -a /etc/skel/. "$stage/"
+rm -rf "$stage/.ssh" "$stage/.gnupg"
+cp -af "$stage/." ~/
 
 omarchy-refresh-limine
 omarchy-refresh-plymouth
