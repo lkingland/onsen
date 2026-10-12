@@ -53,3 +53,57 @@
 --     column_width = 0.97,
 --   },
 -- })
+
+-- A small outer gap. These desks are LG TVs, whose edges do not land
+-- exactly on the panel's, so a window flush with the edge can lose its
+-- border there; 5 keeps the border in view. The inner gap stays stock.
+hl.config({ general = { gaps_out = 5 } })
+
+-- Bar reveal. The bar is kept hidden (the bar-off toggle; Super + Shift +
+-- Space shows it) and sits on the bottom edge. Resting the pointer on that
+-- edge brings it back for as long as the pointer stays on the bar's strip;
+-- moving away hides it again. Only a bar this revealed is hidden by it: one
+-- shown by hand stays. A compositor timer polls the pointer in-process, ten
+-- times a second, since Hyprland raises no event for pointer motion and a
+-- layer-shell strip under the hidden bar never saw hover here.
+local onsen_bar_reveal = { shown_by_us = false }
+
+local function onsen_bar_hidden()
+  local f = io.open((os.getenv("HOME") or "") .. "/.local/state/omarchy/toggles/bar-off", "r")
+  if f then
+    f:close()
+    return true
+  end
+  return false
+end
+
+local function onsen_bar_set_hidden(hidden)
+  hl.exec_cmd("omarchy-toggle bar-off " .. (hidden and "on" or "off") .. " && omarchy-shell -q omarchy.bar syncHidden")
+end
+
+local function onsen_bar_tick()
+  local c = hl.get_cursor_pos()
+  local m = hl.get_monitor_at_cursor()
+  if c and m and m.scale and m.scale > 0 then
+    local bottom = m.y + m.height / m.scale
+    local bar = 26 -- the bar's horizontal size, as Style.bar.sizeHorizontal
+    if not onsen_bar_reveal.shown_by_us then
+      if c.y >= bottom - 2 and onsen_bar_hidden() then
+        onsen_bar_reveal.shown_by_us = true
+        onsen_bar_set_hidden(false)
+      end
+    elseif onsen_bar_hidden() then
+      -- Hidden by hand meanwhile: not ours any more.
+      onsen_bar_reveal.shown_by_us = false
+    elseif c.y < bottom - bar - 8 then
+      onsen_bar_reveal.shown_by_us = false
+      onsen_bar_set_hidden(true)
+    end
+  end
+  hl.timer(onsen_bar_tick, { timeout = 100, type = "oneshot" })
+end
+
+if not _G.onsen_bar_reveal_started then
+  _G.onsen_bar_reveal_started = true
+  hl.timer(onsen_bar_tick, { timeout = 1000, type = "oneshot" })
+end

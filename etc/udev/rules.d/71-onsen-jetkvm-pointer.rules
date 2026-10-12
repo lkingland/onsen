@@ -1,0 +1,12 @@
+# Onsen edition: the JetKVM's absolute pointer (USB interface 01; interface 02
+# is its relative mouse) lands on the KVM's own screen, not across the whole
+# layout. Hyprland spreads an absolute pointer's 0..1 range over the bounding
+# box of every monitor and binds only tablets and touchscreens to an output,
+# so the range is narrowed here, below Hyprland, to the KVM display's share
+# of that box. Matrix: x scale = KVM width / layout width, y scale = KVM
+# height / layout height, offsets = the KVM's position in the box, in
+# logical pixels. For the KVM at 1920x1080 scale 1 on the far left, beside
+# two 3840x2160 TVs at scale 1.25: 1920/8064, 1080/1728, offsets 0.
+# Re-add the device after a change (udevadm trigger --action=remove, then
+# add, on its event node), or replug the KVM's USB.
+SUBSYSTEM=="input", KERNEL=="event*", ENV{ID_INPUT_MOUSE}=="1", ENV{ID_VENDOR_ID}=="1d6b", ENV{ID_MODEL_ID}=="0104", ENV{ID_USB_INTERFACE_NUM}=="01", ENV{LIBINPUT_CALIBRATION_MATRIX}="0.238095 0 0 0 0.625 0"

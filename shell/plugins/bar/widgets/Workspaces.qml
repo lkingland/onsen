@@ -10,31 +10,69 @@ BarWidget {
   id: root
   moduleName: "omarchy.workspaces"
 
-  function workspaceById(id) {
+  // Onsen deviation: this bar shows its own monitor's workspaces, numbered by
+  // their position on it, the way Super + number reaches them (Hyprland's r~N
+  // selector), not every workspace by its global id. The window a pooled
+  // widget sits in tells it the screen, and so the monitor.
+  readonly property var panelWindow: root.QsWindow.window
+  readonly property var monitor: panelWindow && panelWindow.screen ? Hyprland.monitorFor(panelWindow.screen) : null
+
+  function monitorWorkspaces() {
+    var out = []
     var values = Hyprland.workspaces.values
+    var name = root.monitor ? root.monitor.name : ""
+
     for (var i = 0; i < values.length; i++) {
-      if (values[i].id === id) return values[i]
+      var workspace = values[i]
+      if (workspace.id <= 0) continue
+      if (!workspace.monitor || workspace.monitor.name !== name) continue
+      out.push(workspace)
     }
 
-    return null
+    out.sort(function(left, right) { return left.id - right.id })
+    return out
   }
 
-  function workspaceIds() {
-    var ids = [1, 2, 3, 4, 5]
-    var values = Hyprland.workspaces.values
+  // Positions 1..N on this monitor, at least five, so the row keeps a size.
+  function positions() {
+    var count = root.monitorWorkspaces().length
+    var out = []
+    for (var position = 1; position <= Math.max(5, count); position++) out.push(position)
+    return out
+  }
 
-    for (var i = 0; i < values.length; i++) {
-      var id = values[i].id
-      if (id > 0 && id <= 10 && ids.indexOf(id) === -1) ids.push(id)
+  function workspaceAt(position) {
+    var workspaces = root.monitorWorkspaces()
+    return position >= 1 && position <= workspaces.length ? workspaces[position - 1] : null
+  }
+
+  function positionOf(workspace) {
+    var workspaces = root.monitorWorkspaces()
+    for (var i = 0; i < workspaces.length; i++) {
+      if (workspaces[i].id === workspace.id) return i + 1
     }
-
-    ids.sort(function(left, right) { return left - right })
-    return ids
+    return -1
   }
 
-  function focusWorkspace(id) {
+  // The monitor's own active workspace, which may not hold the pointer's focus.
+  function activePosition() {
+    var active = root.monitor ? root.monitor.activeWorkspace : null
+    return active ? root.positionOf(active) : -1
+  }
+
+  function focusPosition(position) {
     if (!root.bar) return
-    root.bar.run("hyprctl dispatch " + Util.shellQuote("hl.dsp.focus({ workspace = \"" + id + "\" })"))
+    var workspace = root.workspaceAt(position)
+    if (workspace) {
+      root.bar.run("hyprctl dispatch " + Util.shellQuote("hl.dsp.focus({ workspace = \"" + workspace.id + "\" })"))
+      return
+    }
+    // A position past the last workspace is a new one: r~N counts on the focused
+    // monitor, so focus this bar's monitor first.
+    if (!root.monitor) return
+    root.bar.run("hyprctl --batch " + Util.shellQuote(
+      "dispatch hl.dsp.focus({ monitor = \"" + root.monitor.name + "\" }) ; " +
+      "dispatch hl.dsp.focus({ workspace = \"r~" + position + "\" })"))
   }
 
   // A wheel notch moves one entry along the row, and a touchpad adds up its
@@ -48,11 +86,11 @@ BarWidget {
 
     // Holds at either end rather than wrapping, so a touchpad swipe that runs
     // long stops on the last workspace.
-    var ids = root.workspaceIds()
-    var index = ids.indexOf(root.focusedWorkspaceId())
+    var positions = root.positions()
+    var index = positions.indexOf(root.activePosition())
     if (index === -1) return
-    var target = ids[Util.clamp(index - wheel.steps, 0, ids.length - 1)]
-    if (target !== ids[index]) root.focusWorkspace(target)
+    var target = positions[Util.clamp(index - wheel.steps, 0, positions.length - 1)]
+    if (target !== positions[index]) root.focusPosition(target)
   }
 
   // The focused workspace shows its layout: a square tiles, a circle scrolls,
@@ -153,30 +191,32 @@ BarWidget {
     id: grid
     anchors.fill: parent
     anchors.rightMargin: root.trailingGap
-    columns: root.vertical ? 1 : root.workspaceIds().length
+    columns: root.vertical ? 1 : root.positions().length
     columnSpacing: root.vertical ? 0 : Style.space(1)
     rowSpacing: root.vertical ? Style.space(2) : 0
 
     Repeater {
-      model: root.workspaceIds()
+      model: root.positions()
 
       WidgetButton {
         required property int modelData
 
-        readonly property var workspace: root.workspaceById(modelData)
+        readonly property var workspace: root.workspaceAt(modelData)
         readonly property bool occupied: workspace !== null && workspace.toplevels.values.length > 0
-        readonly property bool focused: Hyprland.focusedWorkspace !== null && Hyprland.focusedWorkspace.id === modelData
+        readonly property bool focused: workspace !== null && Hyprland.focusedWorkspace !== null && Hyprland.focusedWorkspace.id === workspace.id
+        // Not `active`: WidgetButton's own `active` paints the urgent colour.
+        readonly property bool shownOnMonitor: modelData === root.activePosition()
 
         bar: root.bar
         text: focused ? root.modeGlyph(root.focusedMode) : (modelData === 10 ? "0" : String(modelData))
-        opacity: occupied || focused ? 1 : 0.5
+        opacity: occupied || focused || shownOnMonitor ? 1 : 0.5
         horizontalMargin: 6
         verticalPadding: 6
         fixedWidth: root.vertical ? root.barSize : Style.space(20)
         fixedHeight: root.barSize
         onPressed: function() {
           if (focused) root.cycleLayout()
-          else root.focusWorkspace(modelData)
+          else root.focusPosition(modelData)
         }
         onWheelMoved: function(delta) { root.scrollWorkspaces(delta) }
       }
