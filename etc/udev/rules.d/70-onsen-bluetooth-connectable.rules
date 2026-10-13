@@ -1,0 +1,12 @@
+# Onsen edition: page scan on for every Bluetooth controller as it appears,
+# so a paired classic HID (the Magic Trackpad) can reconnect itself when it
+# wakes on a touch. bluez leaves the controller non-connectable and only
+# pages on request, which left every reconnect to omarchy-bluetooth-reconnect's
+# next pass, up to a minute away. The setting is stored by the kernel while
+# the controller is still down and applied when bluez powers it.
+#
+# Only controllers (hci0), not their connections (hci0:9), which are in the
+# same subsystem and would otherwise run btmgmt with a connection's number
+# as the index: that btmgmt never returns, and the stuck udev worker holds
+# up every input device that arrives after it, the trackpad included.
+ACTION=="add", SUBSYSTEM=="bluetooth", KERNEL=="hci[0-9]*", KERNEL!="hci*:*", RUN+="/usr/bin/btmgmt --index %n connectable on"
