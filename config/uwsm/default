@@ -1,0 +1,10 @@
+# Onsen edition: sourced by uwsm's Omarchy env.d when the Hyprland session
+# starts, after Omarchy's own PATH setup. uwsm exports the environment it
+# computes here into the user manager, over what environment.d set, so the
+# session PATH needs these here too: Go builds land in ~/go/bin, scripts and
+# self-built binaries in ~/.local/bin. config/environment.d/path.conf covers
+# the user services started before the session.
+case ":$PATH:" in
+  *":$HOME/go/bin:"*) ;;
+  *) export PATH="$HOME/.local/bin:$HOME/go/bin:$PATH" ;;
+esac
