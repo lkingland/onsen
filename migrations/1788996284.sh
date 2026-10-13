@@ -1,5 +1,11 @@
 echo "Repair remote Neovim clipboard yanks and paste"
 
+# Onsen: the stock Neovim package is removed, and config/nvim ships the
+# current provider through onsen update, so there is nothing to repair from.
+if ! omarchy-pkg-present omarchy-nvim; then
+  exit 0
+fi
+
 nvim_provider="$HOME/.config/nvim/lua/config/remote_clipboard.lua"
 provider_source="/usr/share/omarchy-nvim/config/lua/config/remote_clipboard.lua"
 

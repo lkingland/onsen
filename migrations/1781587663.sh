@@ -1,5 +1,11 @@
 echo "Enable secure remote Neovim clipboard support"
 
+# Onsen: the stock Neovim package is removed, and config/nvim ships these
+# files through onsen update, so there is nothing to copy from.
+if ! omarchy-pkg-present omarchy-nvim; then
+  exit 0
+fi
+
 nvim_config_dir="$HOME/.config/nvim"
 nvim_options="$nvim_config_dir/lua/config/options.lua"
 nvim_provider="$nvim_config_dir/lua/config/remote_clipboard.lua"
