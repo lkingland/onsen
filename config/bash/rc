@@ -1,0 +1,145 @@
+# ~/.config/bash/rc: the Onsen edition's bash config. ~/.bashrc sources it
+# after Omarchy's default/bash/rc (the shipped .bashrc has the line; a
+# migration adds it to an existing one). Interactive shells only. Whatever
+# sits in ~/.config/bash/rc.d/ is sourced last, so a theme can add its
+# colors without editing this file.
+
+# --- Environment -------------------------------------------------------------
+export LESS="-R --no-init --quit-if-one-screen"
+export KUBE_EDITOR=nvim
+export GIT_EXTERNAL_DIFF=difft
+export DFT_UNDERLINE=false
+export TIME_STYLE="+%Y/%m/%d %H:%M"
+export GPG_TTY=$(tty)
+# The card's agent: smartsocket's socket at the standard gpg-agent path.
+export SSH_AUTH_SOCK="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/gnupg/S.gpg-agent.ssh"
+export JAVA_HOME=/usr/lib/jvm/default
+export ANDROID_HOME="$HOME/Android/Sdk"
+export ANDROID_SDK_ROOT="$ANDROID_HOME"
+# The session already has ~/.local/bin and ~/go/bin (config/uwsm/default);
+# a shell that arrived over ssh does not.
+case ":$PATH:" in
+  *":$HOME/go/bin:"*) ;;
+  *) PATH="$HOME/.local/bin:$HOME/go/bin:$PATH" ;;
+esac
+PATH="$HOME/sh:$PATH"
+PATH="$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin"
+PATH="$PATH:$ANDROID_HOME/emulator:$ANDROID_HOME/build-tools/34.0.0"
+export PATH
+
+# --- History: atuin ----------------------------------------------------------
+# atuin hooks bash through bash-preexec (its own package). The database
+# lives in ~/state; config/atuin/config.toml is the settings.
+[[ -r /usr/share/bash-preexec/bash-preexec.sh ]] && source /usr/share/bash-preexec/bash-preexec.sh
+if command -v atuin &>/dev/null; then
+  eval "$(atuin init bash)"
+fi
+
+# --- Aliases -----------------------------------------------------------------
+# Omarchy's own are already in (default/bash/aliases). These replace its
+# c (opencode), cx (claude), and h (herdr).
+unalias c cx h 2>/dev/null
+alias x='clear'
+alias e='exit'
+alias v='nvim'
+alias s='sudo'
+alias k='kubectl'
+alias h='hamr'
+alias hd='hamr-dissolve'
+alias hp='hamr-projects'
+alias hs='hamr-spawn'
+alias ht='hamr-status'
+cx() { mkdir -p "$1" && builtin cd "$1"; }
+
+# eza (ls, lsa, lt, and lta are Omarchy's)
+alias l='eza -l --icons --git'
+alias ll='eza -la --icons --git'
+alias lla='eza -la --icons --git'
+alias la='eza -a --icons'
+alias ltree='eza --tree --level=2 --icons --git'
+alias ltt='eza --tree --level=4 --icons --git --only-dirs'
+
+# git (g, gcm, gcam, and gcad are Omarchy's; ga and gd replace its worktree
+# helpers of the same names)
+unset -f ga gd 2>/dev/null
+alias ga='git add'
+alias gb='git branch'
+alias gc='git commit'
+alias gca='git commit -a'
+alias gco='git checkout'
+alias gd='git diff'
+alias gp='git pull'
+alias gr='git remote -v'
+alias gs='git status -sb'
+alias gt='git tag --sort=version:refname'
+alias gtd='git tag --delete'
+alias gu='git push'
+gba() { git fetch -ap && git branch -a; }
+gl() {
+  git log -n "${1:-10}" --graph --pretty=format:"%Cgreen%h%Creset %an: %s %Creset %C(yellow)%d%Creset %Cgreen(%cr)%Creset" --abbrev-commit --date=relative
+}
+gll() {
+  git log --graph --pretty=format:"%Cgreen%h%Creset %an: %s %Creset %C(yellow)%d%Creset %Cgreen(%cr)%Creset" --abbrev-commit --date=relative
+}
+glog() {
+  git log --graph --topo-order --pretty=format:"%w(100,0,6)%C(yellow)%h%C(bold)%C(black)%d %C(cyan)%ar %C(green)%an%n%C(bold)%C(white)%s %N" --abbrev-commit
+}
+dl() { git log -p --ext-diff "$@"; }
+ds() { git show --ext-diff "$@"; }
+dt() { git diff --ext-diff "$@"; }
+jll() { jj log -r '@ | ancestors(remote_bookmarks().., 2) | trunk()'; }
+
+# systemd and the clipboard
+alias sc='systemctl'
+alias scu='systemctl --user'
+alias jc='journalctl --output=cat'
+alias jcu='journalctl --output=cat --user'
+alias copy='wl-copy'
+alias paste='wl-paste'
+
+# --- Directory stack ---------------------------------------------------------
+# c changes directory and remembers where it came from, o goes back, and
+# bash's own dirs -v lists the stack. z (and so Omarchy's cd, which falls
+# through to it) remembers too. compress, decompress, and iso2sd are
+# Omarchy's.
+c() { pushd "${1:-$HOME}" >/dev/null; }
+o() { popd >/dev/null; }
+if declare -F __zoxide_z >/dev/null; then
+  z() { pushd -n "$PWD" >/dev/null; __zoxide_z "$@"; }
+fi
+
+# --- Media -------------------------------------------------------------------
+transcode-video-1080p() { ffmpeg -i "$1" -vf "scale=1920:1080" -c:v libx264 -crf 23 -c:a aac -b:a 128k "$2"; }
+transcode-video-4K() { ffmpeg -i "$1" -vf "scale=3840:2160" -c:v libx265 -crf 28 -c:a aac -b:a 192k "$2"; }
+img2jpg() { magick "$1" -quality 85 "$2"; }
+img2jpg-small() { magick "$1" -resize "1920x1080>" -quality 75 "$2"; }
+img2png() { magick "$1" -compress lossless "$2"; }
+
+# --- Power: confirm the host first -------------------------------------------
+# These machines are reached over ssh and tmux; a reboot typed into the
+# wrong pane is the one mistake worth a prompt.
+power-verb-guard() {
+  local verb=$1 host resp
+  shift
+  host=$(hostname)
+  host=${host^^}
+  printf '\e[1;31m⚠ You are on %s\e[0m — %s will act HERE.\n' "$host" "$verb"
+  read -r -p "Type '$host' to proceed: " resp || resp=
+  if [[ ${resp^^} == "$host" ]]; then
+    command "$verb" "$@"
+  else
+    printf '\e[33m%s aborted — hostname not confirmed.\e[0m\n' "$verb"
+  fi
+}
+poweroff() { power-verb-guard poweroff "$@"; }
+reboot() { power-verb-guard reboot "$@"; }
+shutdown() { power-verb-guard shutdown "$@"; }
+
+# --- Tool wrappers (Bitwarden, Jira, Linode) ---------------------------------
+[[ -r ~/.config/bash/tools ]] && source ~/.config/bash/tools
+
+# --- Drop-ins ----------------------------------------------------------------
+for f in ~/.config/bash/rc.d/*; do
+  [[ -r $f ]] && source "$f"
+done
+unset f

@@ -1,0 +1,25 @@
+# Tool wrappers: Bitwarden, Jira, and Linode. Sourced by ~/.config/bash/rc.
+# No secret lives here; each token is read from Bitwarden when the command
+# runs. bw-unlock writes the session the other wrappers use.
+
+bw-unlock() {
+  command bw unlock --raw > ~/.config/bw/session
+}
+
+# Bitwarden (session from the shared unlock file)
+bw() {
+  local session
+  session=$(<~/.config/bw/session)
+  command bw --session "$session" "$@"
+}
+
+# Jira CLI (token from Bitwarden)
+jira() {
+  JIRA_API_TOKEN=$(bw get password "jira token") command jira "$@"
+}
+
+# Linode CLI: the agent/ops high-auth PAT (no Object Storage write).
+# Backup OS mutation is linode-backups-token only; never wire it here.
+linode-cli() {
+  LINODE_CLI_TOKEN=$(bw get password linode-cli-token) command linode-cli "$@"
+}
