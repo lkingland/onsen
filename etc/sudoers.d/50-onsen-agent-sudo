@@ -1,0 +1,6 @@
+# Onsen edition: agents run privileged steps unattended, so sudo asks no
+# password of wheel (on these machines, the one user). sudo also keeps the SSH
+# agent socket, so git or rsync over ssh under sudo still reaches the YubiKey.
+# The package installs this file 0440 root; sudo ignores it otherwise.
+Defaults:%wheel env_keep += "SSH_AUTH_SOCK"
+%wheel ALL=(ALL:ALL) NOPASSWD: ALL

@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# omarchy:summary=Reconnect trusted Bluetooth keyboards and trackpads
+# omarchy:group=bluetooth
+# omarchy:args=[--follow]
+# omarchy:examples=omarchy bluetooth reconnect
+
+# Apple trackpads do not call back in. BlueZ retries a device only after a
+# link that was already up drops, so a trusted trackpad stays dark across
+# boot until something pages it. This pages trusted HID and HID-over-GATT
+# devices and leaves audio devices alone.
+
+set -uo pipefail
+
+readonly hid_uuid='00001124-0000-1000-8000-00805f9b34fb'
+readonly hog_uuid='00001812-0000-1000-8000-00805f9b34fb'
+readonly pending_seconds=${OMARCHY_BLUETOOTH_RECONNECT_PENDING:-15}
+readonly quiet_seconds=${OMARCHY_BLUETOOTH_RECONNECT_QUIET:-45}
+readonly connect_timeout=${OMARCHY_BLUETOOTH_RECONNECT_TIMEOUT:-10}
+
+follow=0
+if [[ ${1:-} == "--follow" ]]; then
+  follow=1
+elif [[ -n ${1:-} ]]; then
+  echo "Usage: omarchy-bluetooth-reconnect [--follow]" >&2
+  exit 1
+fi
+
+powered() {
+  bluetoothctl show 2>/dev/null | grep -q 'Powered: yes'
+}
+
+# Print the addresses of trusted, paired, unblocked input devices that are
+# not currently connected. One address per line.
+pending_inputs() {
+  local mac info
+  while read -r _ mac _; do
+    [[ $mac =~ ^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$ ]] || continue
+    info=$(bluetoothctl info "$mac" 2>/dev/null || true)
+    grep -q 'Paired: yes' <<<"$info" || continue
+    grep -q 'Trusted: yes' <<<"$info" || continue
+    grep -q 'Blocked: yes' <<<"$info" && continue
+    grep -q 'Connected: yes' <<<"$info" && continue
+    grep -qiE "$hid_uuid|$hog_uuid" <<<"$info" || continue
+    printf '%s\n' "$mac"
+  done < <(bluetoothctl devices 2>/dev/null || true)
+}
+
+pass_once() {
+  local mac name
+  pending_inputs | while read -r mac; do
+    [[ -n $mac ]] || continue
+    name=$(bluetoothctl info "$mac" 2>/dev/null | awk -F': ' '/^[[:space:]]*Alias:/ { print $2; exit }')
+    echo "connecting ${name:-$mac}"
+    bluetoothctl --timeout "$connect_timeout" connect "$mac" >/dev/null 2>&1 || true
+  done
+}
+
+if (( follow )); then
+  while true; do
+    if ! powered; then
+      sleep "$quiet_seconds"
+      continue
+    fi
+    if [[ -n $(pending_inputs) ]]; then
+      pass_once
+      sleep "$pending_seconds"
+    else
+      sleep "$quiet_seconds"
+    fi
+  done
+fi
+
+powered || exit 0
+pass_once
+exit 0

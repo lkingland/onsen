@@ -1,0 +1,20 @@
+[Unit]
+Description=Reconnect trusted Bluetooth input devices
+Documentation=man:bluetoothctl(1)
+After=dbus.socket
+Requires=dbus.socket
+
+[Service]
+Type=simple
+# Shipped from config/systemd/user by onsen update, which also enables it
+# (default/onsen/services); the script is in the omarchy-dev package.
+# Stay up for the session. The script waits while the adapter is off (or not
+# yet there: a USB dongle can enumerate well after login, so the unit has no
+# condition on /sys/class/bluetooth), and pages a trusted trackpad whenever it
+# is awake, including long after login.
+ExecStart=/usr/bin/omarchy-bluetooth-reconnect --follow
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target
