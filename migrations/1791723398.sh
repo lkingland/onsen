@@ -1,5 +1,11 @@
 echo "Let Neovim's current line and status line show the terminal background"
 
+# Onsen: the stock Neovim package is removed, and config/nvim ships these
+# files through onsen update, so there is nothing to copy from.
+if ! omarchy-pkg-present omarchy-nvim; then
+  exit 0
+fi
+
 # ~/.config/nvim is copied once from omarchy-nvim, so it misses the package's
 # later changes. Bring in the transparency file and lualine spec it now ships.
 config="$HOME/.config/nvim"
