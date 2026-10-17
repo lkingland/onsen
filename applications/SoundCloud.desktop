@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Name=SoundCloud
+Exec=omarchy-launch-webapp https://soundcloud.com/
+StartupWMClass=chrome-soundcloud.com__-Default
+Terminal=false
+Type=Application
+Icon=soundcloud
+StartupNotify=true
