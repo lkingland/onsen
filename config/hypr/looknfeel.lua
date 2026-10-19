@@ -107,3 +107,11 @@ if not _G.onsen_bar_reveal_started then
   _G.onsen_bar_reveal_started = true
   hl.timer(onsen_bar_tick, { timeout = 1000, type = "oneshot" })
 end
+
+-- Onsen: the focused window's frame in the Onsen palette's green, the same as
+-- tmux's active pane border, in place of the theme's accent. This file loads
+-- after the theme's colours, so it holds across a theme switch.
+hl.config({
+  general = { col = { active_border = "#8FD9A8" } },
+  group = { col = { border_active = "#8FD9A8" } },
+})
