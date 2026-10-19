@@ -133,15 +133,15 @@ A machine being rebuilt first copies its `~/state` (and the other home folders) 
 
 Keys, input, and gestures sit in the user override files stock provides, `config/hypr/bindings.lua` and `input.lua`, so `default/hypr` stays upstream's.
 
-- **Workspaces and monitors.** Super + number goes to that number's workspace on the focused monitor (Hyprland's `r~N` selector), not to a global id, and Super + Ctrl + number focuses monitor N (stock opens the bar's Nth panel; the letter binds for the panels stay).
-- **Keys.** HJKL focuses and Shift+HJKL moves the window. Togglesplit is Ctrl+J and the keybindings menu is Shift+Ctrl+K. Q is the previous workspace, E the next, and W still closes. The workspace-layout cycle, including its floating mode, has no key: L is focus-right. Ctrl+K stays Herdr and Ctrl+L the lock. Compose is Right Alt and key repeat is 40/200.
+- **Workspaces and monitors.** Each monitor has workspaces 1-10 of its own, as upstream ships it (`default/hypr/monitor-workspaces.lua`), so Super + number is a workspace on the focused monitor. Super + Ctrl + number focuses monitor N (stock opens the bar's Nth panel; the letter binds for the panels stay).
+- **Keys.** HJKL focuses and Shift+HJKL moves the window. Togglesplit is Ctrl+J and the keybindings menu is Shift+Ctrl+K. Q is the previous workspace on the focused monitor and E the next, like upstream's Super + Tab, and W still closes. The workspace-layout cycle, including its floating mode, has no key: L is focus-right. Ctrl+K stays Herdr and Ctrl+L the lock. Compose is Right Alt and key repeat is 40/200.
 - **Trackpad.** Natural scroll, two-finger click, scroll factor 0.4, drag-lock in libinput's timeout mode, and tap-and-drag. A trackpad swipe keeps going past the end workspaces.
 - **Borders and gaps.** Outer gap is 0. One visible tiled window, and a workspace that is a single group, draws no border.
 - **Display.** The desk is a 42" 4K at scale 1.25, and GDK scale stays 2.
 - Files: `default/hypr/bindings/tiling.lua`, `default/hypr/bindings/utilities.lua`, `default/hypr/input.lua`, `default/hypr/looknfeel.lua`, `config/hypr/monitors.lua`.
 
 **The bar.** It sits on the bottom edge and overlays, so it never reserves a strip and showing or hiding it never moves tiled windows.
-- Its workspaces widget (`shell/plugins/bar/widgets/Workspaces.qml`, the fork's second patch to an upstream file) shows each bar its own monitor's workspaces, numbered by position as Super + number reaches them, not every workspace by global id.
+- Each bar shows its own monitor's workspaces, numbered 1-10. That is upstream's widget now; the fork patched it until upstream gave every monitor its own workspaces.
 - It starts hidden (`bar-off`, created once by migration `1791797200`), and resting the pointer on the bottom edge brings it back until the pointer leaves it. A compositor timer in `config/hypr/looknfeel.lua` polls the pointer, since Hyprland raises no event for pointer motion; a bar shown by hand is left alone.
 - Its edge, overlay, and background are applied once by migration `1792042330`: the edition ships `config/omarchy/shell.json`, but Omarchy's first login writes one before the edition's copy can seed it.
 - Super+Shift+Space shows or hides it, and upstream keeps that choice across login. When it is shown it may cover tmux.
