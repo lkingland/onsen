@@ -17,6 +17,8 @@
 
 **Pairs with [onsen-matrix](https://github.com/lkingland/onsen-matrix),** the edition's screensaver. It renders the Matrix's rain as a 3D space you walk through: columns of the Lotus Sutra fall near and far across every display, and it ends the instant you touch anything. On Onsen it sits in the Super+Esc menu under System.
 
+**Built on [smartsocket](https://github.com/lkingland/smartsocket)** for the YubiKey. Every SSH login and every Git and Jujutsu signature here comes from the card, and smartsocket is what makes that painless. It sits in front of the standard gpg-agent and ssh-agent sockets and sends each request to wherever a usable key actually is: the card plugged into this machine, or one forwarded over SSH from the machine you are sitting at. PIN prompts come back to your own screen, so signing works the same at the desk or three hops away.
+
 ## At a glance
 
 **One command keeps it current**
