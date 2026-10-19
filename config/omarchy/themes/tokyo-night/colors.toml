@@ -2,6 +2,10 @@
 # files win. The only change is black behind everything, for the OLED desk:
 # background, dark_background and darker_background are #000000 (stock
 # #1a1b26, #13141c, #0e0e14). lighter_background stays, for highlights.
+# The wallpaper is black too: config/omarchy/backgrounds/tokyo-night/
+# 0-black.png. Re-applying the theme you are already on (omarchy theme set
+# tokyo-night) steps to the next wallpaper in the list; put it back with
+# omarchy theme bg set ~/.config/omarchy/backgrounds/tokyo-night/0-black.png
 
 mode = "dark"
 
