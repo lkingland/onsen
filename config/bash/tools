@@ -3,14 +3,31 @@
 # runs. bw-unlock writes the session the other wrappers use.
 
 bw-unlock() {
+  mkdir -p ~/.config/bw
   command bw unlock --raw > ~/.config/bw/session
+  chmod 600 ~/.config/bw/session
 }
 
-# Bitwarden (session from the shared unlock file)
+# Bitwarden (session from the shared unlock file).
+# login and unlock have to work before that file exists. Reading a
+# missing file prints an error and would pass --session "" through.
 bw() {
-  local session
-  session=$(<~/.config/bw/session)
-  command bw --session "$session" "$@"
+  local session=""
+  if [[ -r ${HOME}/.config/bw/session ]]; then
+    session=$(<"${HOME}/.config/bw/session")
+  fi
+  case "${1:-}" in
+    login|logout|config|help|--help|-h)
+      command bw "$@"
+      ;;
+    *)
+      if [[ -n $session ]]; then
+        command bw --session "$session" "$@"
+      else
+        command bw "$@"
+      fi
+      ;;
+  esac
 }
 
 # Jira CLI (token from Bitwarden)
