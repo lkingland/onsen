@@ -55,9 +55,21 @@
 -- })
 
 -- A small outer gap. These desks are LG TVs, whose edges do not land
--- exactly on the panel's, so a window flush with the edge can lose its
--- border there; 5 keeps the border in view. The inner gap stays stock.
+-- exactly on the panel's, so a window flush with the edge can be clipped;
+-- 5 keeps it clear. The inner gap stays stock.
 hl.config({ general = { gaps_out = 5 } })
+
+-- A lone tiled window, or a workspace that is one group, draws no border:
+-- on a 48" screen a frame around the only window is a garish outline with
+-- nothing to tell apart. Borders return as soon as a second window does.
+hl.window_rule({
+  match = { float = false, workspace = "w[tv1]" },
+  border_size = 0,
+})
+hl.window_rule({
+  match = { float = false, workspace = "w[tg1]" },
+  border_size = 0,
+})
 
 -- Bar reveal. The bar is kept hidden (the bar-off toggle; Super + Shift +
 -- Space shows it) and sits on the bottom edge. Resting the pointer on that
