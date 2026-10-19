@@ -53,3 +53,15 @@ o.bind("SUPER + SHIFT + L", "Move window right", hl.dsp.window.move({ direction 
 for index = 1, 9 do
   o.rebind("SUPER + CTRL + code:" .. tostring(index + 9), "Focus monitor " .. index, hl.dsp.focus({ monitor = tostring(index - 1) }))
 end
+
+-- Hold Super to see where focus is: the onsen.beacon shell plugin
+-- (config/omarchy/plugins/onsen.beacon) pulses at the focused window while
+-- Super is down, and shows only after a short hold, so chords never flash
+-- it. bind_hold's release half fires even when other keys were pressed
+-- during the hold. Non-consuming, so Super still reaches everything else.
+o.bind_hold(
+  "SUPER + Super_L",
+  "Show the focus beacon", "omarchy-shell shell summon onsen.beacon '{}'",
+  "Hide the focus beacon", "omarchy-shell shell hide onsen.beacon",
+  { non_consuming = true }
+)

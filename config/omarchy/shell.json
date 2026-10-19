@@ -81,5 +81,7 @@
       "YouTube"
     ]
   },
-  "plugins": []
+  "plugins": [
+    { "id": "onsen.beacon" }
+  ]
 }
