@@ -54,14 +54,37 @@ for index = 1, 9 do
   o.rebind("SUPER + CTRL + code:" .. tostring(index + 9), "Focus monitor " .. index, hl.dsp.focus({ monitor = tostring(index - 1) }))
 end
 
--- Hold Super to see where focus is: the onsen.beacon shell plugin
--- (config/omarchy/plugins/onsen.beacon) pulses at the focused window while
--- Super is down, and shows only after a short hold, so chords never flash
--- it. bind_hold's release half fires even when other keys were pressed
--- during the hold. Non-consuming, so Super still reaches everything else.
+-- Hold Super to see where focus is. After a short hold, so Super chords
+-- never flash it, the focused window's border shows in green even when it
+-- is alone on its screen (looknfeel.lua keeps that border, transparent),
+-- and the onsen.beacon shell plugin (config/omarchy/plugins/onsen.beacon)
+-- pulses at its centre. Releasing Super puts both away.
+--
+-- The key is plain Super_L, with no modifier in the bind: Hyprland matches
+-- SUPER + Super_L only once Super already counts as held, which is at the
+-- release, so that bind's press half fired together with its release
+-- (measured 2026-10-19: both within 5 ms of the release). bind_hold's
+-- release half ignores modifiers and fires even when other keys were
+-- pressed during the hold. Non-consuming, so Super still reaches everything.
+local onsen_focus = { held = false }
+
+local function onsen_focus_press()
+  onsen_focus.held = true
+  hl.exec_cmd("omarchy-shell shell summon onsen.beacon '{}'")
+  hl.timer(function()
+    if onsen_focus.held then onsen_lone_borders(true) end
+  end, { timeout = 220, type = "oneshot" })
+end
+
+local function onsen_focus_release()
+  onsen_focus.held = false
+  onsen_lone_borders(false)
+  hl.exec_cmd("omarchy-shell shell hide onsen.beacon")
+end
+
 o.bind_hold(
-  "SUPER + Super_L",
-  "Show the focus beacon", "omarchy-shell shell summon onsen.beacon '{}'",
-  "Hide the focus beacon", "omarchy-shell shell hide onsen.beacon",
+  "Super_L",
+  "Show where focus is", onsen_focus_press,
+  "Put the focus marks away", onsen_focus_release,
   { non_consuming = true }
 )
