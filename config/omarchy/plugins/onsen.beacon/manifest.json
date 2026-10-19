@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "onsen.beacon",
+  "name": "Focus beacon",
+  "version": "1.0.0",
+  "author": "Onsen",
+  "description": "While SUPER is held, a pulsing Onsen-green beacon marks the focused window, so the focused screen is plain at a glance without borders or dimming.",
+  "kinds": ["panel"],
+  "keepLoaded": true,
+  "entryPoints": { "panel": "Beacon.qml" }
+}
