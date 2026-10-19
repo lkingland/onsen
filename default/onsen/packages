@@ -77,6 +77,13 @@ tailscale
 syncthing
 mosh
 bind                 # dig
+ethtool              # link and NIC diagnostics: tex's IPv6 enablement research, 2026-10-19
+iperf3               # throughput tests (same)
+mtr                  # path diagnostics (same)
+ndisc6               # rdisc6: IPv6 router discovery (same)
+nmap                 # port and host discovery (same)
+tcpdump              # packet capture (same)
+traceroute           # path diagnostics (same)
 httpie
 websocat
 yq
