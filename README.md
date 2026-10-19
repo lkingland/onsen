@@ -1,15 +1,6 @@
-```
- ▄▀   ▄▀   ▄▀     ▄████████▄  ███▄    ███  ▄█████████  █████████▄  ███▄    ███
- ▀▄   ▀▄   ▀▄     ███    ███  ████▄   ███  ███    ███  ███         ████▄   ███
- ▄▀   ▄▀   ▄▀     ███    ███  ███▀█▄  ███  ███    █▀   ███         ███▀█▄  ███
- ▀▄   ▀▄   ▀▄     ███    ███  ███ ▀█▄ ███  ▀███████▄   ████████▄   ███ ▀█▄ ███
-                  ███    ███  ███  ▀█▄███         ███  ███         ███  ▀█▄███
-█▄          ▄█    ███    ███  ███   ▀████  ▄█     ███  ███         ███   ▀████
-▀██▄▄▄▄▄▄▄▄██▀    ███    ███  ███    ▀███  ███    ███  ███         ███    ▀███
-  ▀▀▀▀▀▀▀▀▀▀      ▀████████▀  ███     ▀██  ▀████████▀  █████████▀  ███     ▀██
-
-                       温泉 · Omarchy: Onsen Edition
-```
+<p align="center">
+  <img src="docs/onsen-logo.svg" alt="Omarchy: Onsen Edition. The hot-spring sign and the word ONSEN in glowing pixel blocks, above 温泉." width="100%">
+</p>
 
 **Omarchy Quattro, drawn hot and quiet.** Onsen is a personal edition of [Omarchy](https://omarchy.org), DHH's beautiful, fun & agentic Linux distribution. It keeps upstream's desktop and adds a hardware-key workflow, a two-monitor desk, and a home for a fleet of coding agents. One command keeps it all rebased onto upstream.
 
