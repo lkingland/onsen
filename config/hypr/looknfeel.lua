@@ -59,17 +59,26 @@
 -- 5 keeps it clear. The inner gap stays stock.
 hl.config({ general = { gaps_out = 5 } })
 
--- A lone tiled window, or a workspace that is one group, draws no border:
+-- A lone tiled window, or a workspace that is one group, shows no border:
 -- on a 48" screen a frame around the only window is a garish outline with
--- nothing to tell apart. Borders return as soon as a second window does.
-hl.window_rule({
-  match = { float = false, workspace = "w[tv1]" },
-  border_size = 0,
-})
-hl.window_rule({
-  match = { float = false, workspace = "w[tg1]" },
-  border_size = 0,
-})
+-- nothing to tell apart. The border is still there, at the stock size, only
+-- transparent, so holding Super can show it (bindings.lua) without moving
+-- the window. Borders show as soon as a second window arrives.
+function _G.onsen_lone_borders(visible)
+  hl.window_rule({
+    name = "onsen-lone-border",
+    enabled = not visible,
+    match = { float = false, workspace = "w[tv1]" },
+    border_color = "rgba(00000000)",
+  })
+  hl.window_rule({
+    name = "onsen-lone-group-border",
+    enabled = not visible,
+    match = { float = false, workspace = "w[tg1]" },
+    border_color = "rgba(00000000)",
+  })
+end
+onsen_lone_borders(false)
 
 -- Bar reveal. The bar is kept hidden (the bar-off toggle; Super + Shift +
 -- Space shows it) and sits on the bottom edge. Resting the pointer on that
