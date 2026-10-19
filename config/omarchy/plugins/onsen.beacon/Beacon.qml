@@ -10,7 +10,8 @@ import qs.Ui
 // after a short hold, so SUPER chords never flash it, then marks the centre of
 // the focused window, or of the focused screen when it has none, with a
 // breathing core and ripples like a drop on hot water. While SUPER stays down
-// it follows focus to wherever a chord moves it. Visual only: no keyboard
+// it follows focus to wherever a chord moves it. On a terminal holding a
+// tmux client it marks the active pane rather than the whole window. Visual only: no keyboard
 // focus, and an empty input region, so it never takes a click.
 Item {
   id: root
@@ -49,41 +50,28 @@ Item {
     onTriggered: root.close()
   }
 
-  // hyprctl reports window and monitor positions in the same layout
-  // coordinates, so the window's centre less its monitor's origin is a point
-  // on the overlay, which covers that monitor.
+  // locate.py says where: the centre of the focused window, of the active
+  // tmux pane when that window is a terminal holding a tmux client, or of the
+  // screen when it has no window, in logical pixels on the focused monitor.
   function place(text) {
-    var parts = String(text || "").split("\n--onsen-beacon--\n")
-    var win = {}, monitors = []
-    try { win = JSON.parse(parts[0] || "{}") } catch (e) {}
-    try { monitors = JSON.parse(parts[1] || "[]") } catch (e) {}
-
-    var mon = null
-    for (var i = 0; i < monitors.length; i++) if (monitors[i].focused) mon = monitors[i]
-    if (!mon) return
-    var scale = mon.scale > 0 ? mon.scale : 1
-    var width = mon.width / scale, height = mon.height / scale
-
-    if (win && win.at && win.size && win.monitor === mon.id) {
-      cx = win.at[0] + win.size[0] / 2 - mon.x
-      cy = win.at[1] + win.size[1] / 2 - mon.y
-    } else {
-      cx = width / 2
-      cy = height / 2
-    }
+    var spot = null
+    try { spot = JSON.parse(String(text || "").trim() || "null") } catch (e) {}
+    if (!spot) return
+    cx = spot.x
+    cy = spot.y
 
     // Focus moved to another screen mid-hold: the overlay maps on the focused
     // screen when it opens, so close and reopen it there.
-    if (monitorName !== "" && mon.name !== monitorName && shown) {
+    if (monitorName !== "" && spot.monitor !== monitorName && shown) {
       shown = false
       Qt.callLater(function() { root.shown = root.held })
     }
-    monitorName = mon.name
+    monitorName = spot.monitor
   }
 
   Process {
     id: locate
-    command: ["sh", "-c", "hyprctl -j activewindow; printf '\\n--onsen-beacon--\\n'; hyprctl -j monitors"]
+    command: ["python3", String(Qt.resolvedUrl("locate.py")).replace(/^file:\/\//, "")]
     stdout: StdioCollector {
       waitForEnd: true
       onStreamFinished: root.place(text)
