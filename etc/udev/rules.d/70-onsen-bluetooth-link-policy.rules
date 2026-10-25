@@ -1,0 +1,11 @@
+# Onsen edition: the Magic Trackpad on the TP-Link UB500 goes quiet while its
+# link is in sniff mode. bluez still says connected, the battery still reads,
+# but touches never reach the host until something makes the kernel send Exit
+# Sniff Mode. Only the controller's link policy can keep sniff off, and the
+# kernel on this machine rejects the adapter-wide ioctl, so the policy is set
+# per link, as soon as the trackpad's HID input device appears. uniq is the
+# device's Bluetooth address.
+#
+# input[0-9]* only: the event node is a child with the same ancestry and would
+# run the command a second time.
+ACTION=="add", SUBSYSTEM=="input", KERNEL=="input[0-9]*", ATTR{name}=="Apple Inc. Magic Trackpad", ATTR{uniq}=="?*", RUN+="/usr/bin/omarchy-bluetooth-link-policy $attr{uniq}"
