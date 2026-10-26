@@ -131,6 +131,7 @@ slack-desktop
 claude-desktop
 spotify
 obs-studio
+thunderbird          # calendar and contacts against Radicale on cumulus
 
 # --- Tools ---------------------------------------------------------------------------------------------
 dust
