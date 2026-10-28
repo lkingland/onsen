@@ -27,3 +27,12 @@ require("default.hypr.toggles")
 
 -- Add any other personal Hyprland configuration below.
 -- o.window("qemu", { workspace = "5" })
+
+-- Thunderbird's calendar popup shares the main window's class. It maps with
+-- an empty title; the event name is set after, and a float rule only sees
+-- the initial title. The editor maps as "Edit Item" and is retitled the
+-- same way. The main window maps as "Mozilla Thunderbird" and stays tiled.
+o.window({
+  class = "^org\\.mozilla\\.Thunderbird$",
+  initial_title = "^$|^Edit Item$|^Edit Recurrence$|^Invite Attendees$|^Please Specify the Timezone$",
+}, { float = true, center = true, size = { 860, 980 } })
