@@ -36,3 +36,10 @@ o.window({
   class = "^org\\.mozilla\\.Thunderbird$",
   initial_title = "^$|^Edit Item$|^Edit Recurrence$|^Invite Attendees$|^Please Specify the Timezone$",
 }, { float = true, center = true, size = { 860, 980 } })
+
+-- Calendar reminders map as "Calendar Reminders" and are retitled
+-- "1 Reminder" once the list loads. The dialog's own size is 600 by 300.
+o.window({
+  class = "^org\\.mozilla\\.Thunderbird$",
+  initial_title = "^Calendar Reminders$",
+}, { float = true, center = true, size = { 600, 300 } })
