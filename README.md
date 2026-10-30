@@ -157,7 +157,7 @@ The screensaver banner spells the machine's owner, not Omarchy. It is `logo.txt`
 
 ### Screensaver
 
-The Onsen Matrix screensaver ([onsen-matrix](https://github.com/lkingland/onsen-matrix), its own repo and package) is the Screensaver entry in the Super+Esc menu under System. The stock ASCII screensaver is a separate entry, Builtin Screensaver. Matrix takes every display it is given, and any key or pointer movement ends it. It is pinned to the LG TVs by make and model (`--outputs 'desc:LG Electronics'`), so the JetKVM's virtual display stays out whichever connector it lands on: a 60 Hz display in the set would pace every window at 60. If `onsen-matrix` is not installed, Screensaver falls back to the stock launcher. Idle still starts the stock screensaver. File: `config/omarchy/extensions/omarchy-menu.jsonc`.
+The Onsen Matrix screensaver ([onsen-matrix](https://github.com/lkingland/onsen-matrix), its own repo and package) is the Screensaver entry in the Super+Esc menu under System. The stock ASCII screensaver is a separate entry, Builtin Screensaver. Matrix takes every display it is given, and any key or pointer movement ends it. It is pinned to the LG TVs by make and model (`--outputs 'desc:LG Electronics'`), so the JetKVM's virtual display stays out whichever connector it lands on: a 60 Hz display in the set would pace every window at 60. If `onsen-matrix` is not installed, both fall back to the stock launcher. Idle starts it too, through `omarchy-launch-screensaver` with no arguments; `force` remains the stock ASCII screensaver. File: `config/omarchy/extensions/omarchy-menu.jsonc` and `bin/omarchy-launch-screensaver`.
 
 ### Web apps
 

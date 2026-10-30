@@ -28,11 +28,12 @@
   // fields are kept unless overridden.
   // "about": {"icon":"","label":"About","action":"omarchy-launch-or-focus-tui \"zsh -c 'fastfetch; read -k 1'\""},
 
-  // Onsen edition: the Screensaver row is Onsen Matrix. The stock ASCII
+  // Onsen edition: the Screensaver row and idle both start Onsen Matrix.
+  // The label has to be restated: an override with no label is stored as
+  // its id, and that replaces the translated "Screensaver". The stock ASCII
   // screensaver stays on the menu as its own row. Matrix is pinned to the LG
-  // TVs by make and model, so the JetKVM stays out whichever connector it
-  // lands on: a 60 Hz display in the set would pace every window at 60.
-  // If onsen-matrix is not installed, Screensaver falls back to the stock one.
-  "system.screensaver": {"icon":"󰖙","aliases":["matrix","rain"],"action":"command -v onsen-matrix >/dev/null && onsen-matrix --outputs 'desc:LG Electronics' || omarchy-launch-screensaver force"},
+  // TVs, so the JetKVM stays out. If onsen-matrix is not installed, both
+  // fall back to the stock launcher.
+  "system.screensaver": {"icon":"󰖙","label":"Screensaver","aliases":["matrix","rain"],"action":"omarchy-launch-screensaver matrix"},
   "system.builtin-screensaver": {"icon":"󱄄","label":"Builtin Screensaver","action":"omarchy-launch-screensaver force"}
 }

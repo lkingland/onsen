@@ -5,6 +5,17 @@
 # Exit early if screensaver is already running
 pgrep -f '[o]rg.omarchy.screensaver' && exit 0
 
+# Onsen: idle (no args) and `matrix` start Onsen Matrix. The class is the one
+# the idle service already watches, and the JetKVM stays out. `force` stays
+# the stock ASCII screensaver: branding, Builtin Screensaver, and the
+# workspace test all call it that way. `matrix` starts even when idle is off.
+if [[ $1 != "force" ]] && command -v onsen-matrix >/dev/null; then
+  if [[ $1 != "matrix" ]] && omarchy-toggle-enabled screensaver-off; then
+    exit 1
+  fi
+  exec onsen-matrix --app-id org.omarchy.screensaver --outputs 'desc:LG Electronics'
+fi
+
 # Allow screensaver to be turned off but also force started
 if omarchy-toggle-enabled screensaver-off && [[ $1 != "force" ]]; then
   exit 1
