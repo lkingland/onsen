@@ -6,7 +6,7 @@
 
 > **Inspiration for your own agent, not a template to clone.** Onsen is one person's machine, written down in full. It isn't meant to be cloned and edited line by line. Point your own agent at this repository, tell it which ideas you like, and let it build them into your setup in its own way. The [In depth](#in-depth) section is written for exactly that reader.
 
-**Pairs with [onsen-matrix](https://github.com/lkingland/onsen-matrix),** the edition's screensaver. It renders the Matrix's rain as a 3D space you walk through: columns of the Lotus Sutra fall near and far across every display, and it ends the instant you touch anything. On Onsen it sits in the Super+Esc menu under System.
+**Pairs with [onsen-matrix](https://github.com/lkingland/onsen-matrix),** the edition's screensaver. It renders the Matrix's rain as a 3D space you walk through: columns of the Lotus Sutra fall near and far across every display, and it ends the instant you touch anything. On Onsen it is the Screensaver entry in the Super+Esc menu under System. The stock ASCII screensaver is the Builtin Screensaver entry.
 
 **Built on [smartsocket](https://github.com/lkingland/smartsocket)** for the YubiKey. Every SSH login and every Git and Jujutsu signature here comes from the card, and smartsocket is what makes that painless. It sits in front of the standard gpg-agent and ssh-agent sockets and sends each request to wherever a usable key actually is: the card plugged into this machine, or one forwarded over SSH from the machine you are sitting at. PIN prompts come back to your own screen, so signing works the same at the desk or three hops away.
 
@@ -157,7 +157,7 @@ The screensaver banner spells the machine's owner, not Omarchy. It is `logo.txt`
 
 ### Screensaver
 
-The Onsen Matrix screensaver ([onsen-matrix](https://github.com/lkingland/onsen-matrix), its own repo and package) sits in the Super+Esc menu under System, beside the stock one. It is opt-in: it runs only from the menu, never on idle. It takes every display it is given, and any key or pointer movement ends it. The entry is shown only when the `onsen-matrix` package is installed. It is pinned to the LG TVs by make and model (`--outputs 'desc:LG Electronics'`), so the JetKVM's virtual display stays out whichever connector it lands on: a 60 Hz display in the set would pace every window at 60. File: `config/omarchy/extensions/omarchy-menu.jsonc`.
+The Onsen Matrix screensaver ([onsen-matrix](https://github.com/lkingland/onsen-matrix), its own repo and package) is the Screensaver entry in the Super+Esc menu under System. The stock ASCII screensaver is a separate entry, Builtin Screensaver. Matrix takes every display it is given, and any key or pointer movement ends it. It is pinned to the LG TVs by make and model (`--outputs 'desc:LG Electronics'`), so the JetKVM's virtual display stays out whichever connector it lands on: a 60 Hz display in the set would pace every window at 60. If `onsen-matrix` is not installed, Screensaver falls back to the stock launcher. Idle still starts the stock screensaver. File: `config/omarchy/extensions/omarchy-menu.jsonc`.
 
 ### Web apps
 

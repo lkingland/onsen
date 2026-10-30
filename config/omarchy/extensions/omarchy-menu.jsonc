@@ -28,12 +28,11 @@
   // fields are kept unless overridden.
   // "about": {"icon":"","label":"About","action":"omarchy-launch-or-focus-tui \"zsh -c 'fastfetch; read -k 1'\""},
 
-  // Onsen edition: the Onsen Matrix screensaver, under System beside the
-  // stock one and opt-in: it runs only from here, never on idle. It takes
-  // every display; any key or pointer movement ends it. Shown when the
-  // onsen-matrix package is installed (built from ~/src/kingland.io/onsen-matrix).
-  // Pinned to the LG TVs by make and model, so the JetKVM's virtual display
-  // stays out whichever connector it lands on: a 60 Hz display in the set
-  // would pace every window at 60, and the screensaver has no business there.
-  "system.onsen-matrix": {"icon":"󰖙","label":"Onsen Matrix","aliases":["matrix","rain"],"when":"command -v onsen-matrix","action":"onsen-matrix --outputs 'desc:LG Electronics'"}
+  // Onsen edition: the Screensaver row is Onsen Matrix. The stock ASCII
+  // screensaver stays on the menu as its own row. Matrix is pinned to the LG
+  // TVs by make and model, so the JetKVM stays out whichever connector it
+  // lands on: a 60 Hz display in the set would pace every window at 60.
+  // If onsen-matrix is not installed, Screensaver falls back to the stock one.
+  "system.screensaver": {"icon":"󰖙","aliases":["matrix","rain"],"action":"command -v onsen-matrix >/dev/null && onsen-matrix --outputs 'desc:LG Electronics' || omarchy-launch-screensaver force"},
+  "system.builtin-screensaver": {"icon":"󱄄","label":"Builtin Screensaver","action":"omarchy-launch-screensaver force"}
 }
