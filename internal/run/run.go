@@ -6,6 +6,7 @@ package run
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -13,6 +14,37 @@ import (
 	"strings"
 	"sync"
 )
+
+// ExitError is a process exit code for Fake runners (and ExitCode).
+type ExitError struct {
+	Code int
+	Msg  string
+}
+
+func (e *ExitError) Error() string {
+	if e.Msg != "" {
+		return e.Msg
+	}
+	return fmt.Sprintf("exit status %d", e.Code)
+}
+
+// ExitCode returns the process exit code in err, or -1 when err is not an
+// exit failure. Used so callers can treat omarchy-snapshot's 127 (no snapper)
+// as soft (Hamr#768).
+func ExitCode(err error) int {
+	if err == nil {
+		return 0
+	}
+	var ee *exec.ExitError
+	if errors.As(err, &ee) {
+		return ee.ExitCode()
+	}
+	var re *ExitError
+	if errors.As(err, &re) {
+		return re.Code
+	}
+	return -1
+}
 
 // Cmd is one program to start.
 type Cmd struct {

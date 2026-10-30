@@ -42,6 +42,10 @@ type machine struct {
 	nvimLog    string // git log of the pull under pkgbuilds/omarchy-nvim
 	sudoAsks   bool   // sudo -n fails until sudo -v has run
 	slowUpdate bool   // omarchy update takes a moment (the sudo refresh ticks)
+	// pacmanKeyValidity is the pub validity in pacman's keyring (Hamr#768).
+	// "u"/"f" = trusted; "-"/"q" = listed but untrusted; "missing" = not listed.
+	// Empty defaults to "u" so settled machines stay quiet.
+	pacmanKeyValidity string
 
 	// What omarchy update does, besides running: upstream migration
 	// 1791403252 putting [omarchy] first, a migration editing a file, and
@@ -199,9 +203,23 @@ func (m *machine) handle(c run.Cmd) (string, error) {
 	case strings.HasSuffix(line, "rev-parse HEAD^{tree}"):
 		return "pkgtree\n", nil
 
-	// The signing key.
-	case c.Name == "gpg":
+	// The signing key (user keyring) and pacman keyring validity (Hamr#768).
+	case c.Name == "gpg" && !c.Sudo:
 		return "fpr:::::::::FPR:\n", nil
+	case c.Sudo && c.Name == "gpg":
+		v := m.pacmanKeyValidity
+		if v == "" {
+			v = "u"
+		}
+		if v == "missing" {
+			return "", errors.New("not in pacman keyring")
+		}
+		return "pub:" + v + ":255:1:FPR:::::\nfpr:::::::::FPR:\n", nil
+	case c.Sudo && c.Name == "pacman-key" && len(a) > 0 && a[0] == "--list-keys":
+		if m.pacmanKeyValidity == "missing" {
+			return "", errors.New("not found")
+		}
+		return "", nil
 
 	// Files written as root, and the identity files read as root.
 	case c.Sudo && c.Name == "mv":
@@ -1104,7 +1122,7 @@ func TestSudoAskedOnceUpFront(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v\n%s%s", err, out(u), errs(u))
 	}
-	before(t, m.f, "sudo -n true", "sudo -v", "sudo pacman-key")
+	before(t, m.f, "sudo -n true", "sudo -v", "sudo gpg --homedir /etc/pacman.d/gnupg")
 	if !strings.Contains(out(u), "sudo needs your password once") {
 		t.Errorf("did not say it asks:\n%s", out(u))
 	}
@@ -1142,8 +1160,8 @@ func TestSudoKeptFresh(t *testing.T) {
 }
 
 // Hamr#768: when step 4 would change root state, the snapshot is the first
-// root write (after the read-only pacman-key --list-keys probe); a failing
-// snapshot stops before any further root write.
+// root write (after the read-only keyring probe); a failing snapshot stops
+// before any further root write. Exit 127 (no snapper) continues.
 func TestChannelStepSnapshotsBeforeRootWrites(t *testing.T) {
 	m := newMachine(t)
 	m.pkgs["omarchy-nvim"] = true
@@ -1154,13 +1172,14 @@ func TestChannelStepSnapshotsBeforeRootWrites(t *testing.T) {
 		}
 		return base(c)
 	}
-	u := m.updater()
-	if err := u.channelStep(context.Background()); err != nil {
+	if err := m.updater().channelStep(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 	firstWrite := ""
 	for _, line := range m.f.Lines() {
-		if strings.HasPrefix(line, "sudo pacman-key --list-keys") {
+		if strings.HasPrefix(line, "sudo gpg --homedir /etc/pacman.d/gnupg") ||
+			strings.HasPrefix(line, "sudo pacman-key --list-keys") ||
+			strings.HasPrefix(line, "gpg --with-colons") {
 			continue
 		}
 		if strings.HasPrefix(line, "sudo ") || strings.HasPrefix(line, "omarchy-update-pacman") {
@@ -1177,7 +1196,7 @@ func TestChannelStepSnapshotsBeforeRootWrites(t *testing.T) {
 	base2 := m2.f.Handle
 	m2.f.Handle = func(c run.Cmd) (string, error) {
 		if c.Sudo && c.Name == "omarchy-snapshot" {
-			return "", errors.New("snapper failed")
+			return "", &run.ExitError{Code: 1, Msg: "snapper failed"}
 		}
 		return base2(c)
 	}
@@ -1191,12 +1210,59 @@ func TestChannelStepSnapshotsBeforeRootWrites(t *testing.T) {
 	}
 }
 
+func TestChannelStepSnapperAbsentContinues(t *testing.T) {
+	m := newMachine(t)
+	m.pkgs["omarchy-nvim"] = true
+	base := m.f.Handle
+	m.f.Handle = func(c run.Cmd) (string, error) {
+		if c.Sudo && c.Name == "omarchy-snapshot" {
+			return "", &run.ExitError{Code: 127, Msg: "snapper missing"}
+		}
+		return base(c)
+	}
+	u := m.updater()
+	if err := u.channelStep(context.Background()); err != nil {
+		t.Fatalf("exit 127 must continue: %v", err)
+	}
+	if !strings.Contains(out(u), "No snapper") {
+		t.Fatalf("want snapper-absent warning in %q", out(u))
+	}
+	if m.f.Index("omarchy-update-pacman -R") < 0 {
+		t.Fatalf("channel step did not proceed: %q", m.f.Lines())
+	}
+}
+
+// Hamr#768 kickback: listed-but-untrusted is wouldChange; snapshot first, then
+// --lsign-key without --add.
+func TestChannelStepListedUntrustedResigns(t *testing.T) {
+	m := newMachine(t)
+	m.pacmanKeyValidity = "-" // listed, not locally signed
+	delete(m.pkgs, "omarchy-nvim")
+	base := m.f.Handle
+	m.f.Handle = func(c run.Cmd) (string, error) {
+		if c.Sudo && c.Name == "omarchy-snapshot" {
+			return "", nil
+		}
+		return base(c)
+	}
+	if err := m.updater().channelStep(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if m.f.Index("sudo omarchy-snapshot create") < 0 {
+		t.Fatalf("want snapshot: %q", m.f.Lines())
+	}
+	if m.f.Index("sudo pacman-key --lsign-key FPR") < 0 {
+		t.Fatalf("want lsign: %q", m.f.Lines())
+	}
+	if m.f.Index("sudo pacman-key --add ") >= 0 {
+		t.Fatalf("must not re-add a listed key: %q", m.f.Lines())
+	}
+}
+
 // Hamr#768: settled channel step takes no snapshot and writes nothing as root
-// (aside from the read-only pacman-key --list-keys probe).
+// (aside from the read-only keyring probes).
 func TestChannelStepSettledIsQuiet(t *testing.T) {
 	m := newMachine(t)
-	// Default machine: [onsen] first, key listed, ours installed, no "-" pkgs,
-	// neovim explicit. Clear omarchy-nvim if present.
 	delete(m.pkgs, "omarchy-nvim")
 	u := m.updater()
 	n := len(m.f.Calls)
@@ -1210,7 +1276,9 @@ func TestChannelStepSettledIsQuiet(t *testing.T) {
 		if strings.HasPrefix(line, "omarchy-update-pacman") {
 			t.Fatalf("pacman tx on settled run: %q", m.f.Lines()[n:])
 		}
-		if strings.HasPrefix(line, "sudo ") && !strings.HasPrefix(line, "sudo pacman-key --list-keys") {
+		if strings.HasPrefix(line, "sudo ") &&
+			!strings.HasPrefix(line, "sudo gpg --homedir /etc/pacman.d/gnupg") &&
+			!strings.HasPrefix(line, "sudo pacman-key --list-keys") {
 			t.Fatalf("root write on settled run: %q in %q", line, m.f.Lines()[n:])
 		}
 	}
@@ -1220,7 +1288,7 @@ func TestChannelStepSettledIsQuiet(t *testing.T) {
 func TestNoDirectPacmanTransactions(t *testing.T) {
 	m := newMachine(t)
 	m.pkgs["omarchy-nvim"] = true
-	delete(m.pkgs, "nnn") // force a declared install in finish
+	delete(m.pkgs, "nnn")
 	u, err := m.update(false)
 	if err != nil {
 		t.Fatalf("%v\n%s%s", err, out(u), errs(u))

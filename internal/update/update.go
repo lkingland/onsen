@@ -551,10 +551,16 @@ func (u *Updater) channelStep(ctx context.Context) error {
 	}
 	if change {
 		// Snapshot before any root write so a pre-update snapper boot
-		// undoes channel/package changes too (Hamr#768).
+		// undoes channel/package changes too (Hamr#768). Exit 127 means
+		// snapper is not installed — omarchy-snapshot documents that as
+		// ignorable; keep every other failure fatal.
 		u.say("Taking a snapshot before changing the channel and packages.")
 		if err := u.Run.Run(ctx, run.Root("omarchy-snapshot", "create")); err != nil {
-			return fmt.Errorf("snapshot before channel step: %w", err)
+			if run.ExitCode(err) == 127 {
+				u.say("No snapper on this machine; continuing without a pre-channel snapshot.")
+			} else {
+				return fmt.Errorf("snapshot before channel step: %w", err)
+			}
 		}
 	}
 	ch := u.channel()

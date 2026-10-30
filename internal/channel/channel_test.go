@@ -228,43 +228,95 @@ func TestSwitchRefusesOtherPlatforms(t *testing.T) {
 }
 
 func TestTrustKey(t *testing.T) {
-	const colons = "pub:u:255:22:7DB461E762F282F9:::::\nfpr:::::::::ABCDEF0123456789ABCDEF0123456789ABCDEF01:\nfpr:::::::::SUBKEY:\n"
-	for _, known := range []bool{true, false} {
-		var added string
+	const (
+		fpr    = "ABCDEF0123456789ABCDEF0123456789ABCDEF01"
+		colons = "pub:u:255:22:7DB461E762F282F9:::::\nfpr:::::::::" + fpr + ":\nfpr:::::::::SUBKEY:\n"
+		ring   = "sudo gpg --homedir /etc/pacman.d/gnupg --with-colons --list-keys " + fpr
+	)
+	// validity: trusted (u), listed-untrusted (-), unlisted (missing).
+	for _, tc := range []struct {
+		name, validity     string
+		listed             bool
+		wantAdd, wantLsign bool
+	}{
+		{"trusted", "u", true, false, false},
+		{"listed-untrusted", "-", true, false, true},
+		{"unlisted", "", false, true, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var added string
+			f := &run.Fake{Handle: func(c run.Cmd) (string, error) {
+				switch c.String() {
+				case "gpg --with-colons --list-keys 7DB461E762F282F9":
+					return colons, nil
+				case ring:
+					if !tc.listed {
+						return "", errors.New("not found")
+					}
+					return "pub:" + tc.validity + ":255:1:" + fpr + ":::::\nfpr:::::::::" + fpr + ":\n", nil
+				case "sudo pacman-key --list-keys " + fpr:
+					if !tc.listed {
+						return "", errors.New("not found")
+					}
+				case "gpg --export --armor " + fpr:
+					return "-----BEGIN PGP PUBLIC KEY BLOCK-----\n", nil
+				}
+				if c.Name == "pacman-key" && len(c.Args) > 0 && c.Args[0] == "--add" {
+					data, _ := os.ReadFile(c.Args[1])
+					added = string(data)
+				}
+				return "", nil
+			}}
+			c, _ := newChannel(t, edge, f)
+			if err := c.TrustKey(context.Background(), "7DB461E762F282F9!"); err != nil {
+				t.Fatal(err)
+			}
+			lsign := f.Index("sudo pacman-key --lsign-key " + fpr)
+			add := f.Index("sudo pacman-key --add ")
+			if tc.wantAdd != (add >= 0) {
+				t.Errorf("add=%d wantAdd=%v; ran %q", add, tc.wantAdd, f.Lines())
+			}
+			if tc.wantLsign != (lsign >= 0) {
+				t.Errorf("lsign=%d wantLsign=%v; ran %q", lsign, tc.wantLsign, f.Lines())
+			}
+			if tc.wantAdd && (add > lsign || !strings.HasPrefix(added, "-----BEGIN")) {
+				t.Errorf("added %q at %d, lsign at %d", added, add, lsign)
+			}
+		})
+	}
+}
+
+func TestKeyTrustedRequiresLocalSignature(t *testing.T) {
+	const fpr = "ABCDEF0123456789ABCDEF0123456789ABCDEF01"
+	const colons = "pub:u:255:22:7DB461E762F282F9:::::\nfpr:::::::::" + fpr + ":\n"
+	const ring = "sudo gpg --homedir /etc/pacman.d/gnupg --with-colons --list-keys " + fpr
+	for _, tc := range []struct {
+		validity string
+		ok       bool
+		listed   bool
+	}{
+		{"u", true, true},
+		{"f", true, true},
+		{"-", false, true},
+		{"q", false, true},
+		{"", false, false},
+	} {
 		f := &run.Fake{Handle: func(c run.Cmd) (string, error) {
 			switch c.String() {
 			case "gpg --with-colons --list-keys 7DB461E762F282F9":
 				return colons, nil
-			case "sudo pacman-key --list-keys ABCDEF0123456789ABCDEF0123456789ABCDEF01":
-				if !known {
-					return "", errors.New("not found")
+			case ring:
+				if !tc.listed {
+					return "", errors.New("missing")
 				}
-			case "gpg --export --armor ABCDEF0123456789ABCDEF0123456789ABCDEF01":
-				return "-----BEGIN PGP PUBLIC KEY BLOCK-----\n", nil
-			}
-			if c.Name == "pacman-key" && c.Args[0] == "--add" {
-				data, _ := os.ReadFile(c.Args[1])
-				added = string(data)
+				return "pub:" + tc.validity + ":255:1:" + fpr + ":::::\n", nil
 			}
 			return "", nil
 		}}
 		c, _ := newChannel(t, edge, f)
-		if err := c.TrustKey(context.Background(), "7DB461E762F282F9!"); err != nil {
-			t.Fatal(err)
-		}
-		lsign := f.Index("sudo pacman-key --lsign-key ABCDEF0123456789ABCDEF0123456789ABCDEF01")
-		add := f.Index("sudo pacman-key --add ")
-		if known {
-			if add >= 0 || lsign >= 0 {
-				t.Errorf("known key must be a no-op; got %q", f.Lines())
-			}
-			continue
-		}
-		if lsign < 0 {
-			t.Errorf("unknown key: never signed locally: %q", f.Lines())
-		}
-		if add < 0 || add > lsign || !strings.HasPrefix(added, "-----BEGIN") {
-			t.Errorf("unknown key: added %q at %d, lsign at %d", added, add, lsign)
+		got, err := c.KeyTrusted(context.Background(), "7DB461E762F282F9!")
+		if err != nil || got != tc.ok {
+			t.Errorf("validity=%q listed=%v: got %v %v, want %v", tc.validity, tc.listed, got, err, tc.ok)
 		}
 	}
 }
