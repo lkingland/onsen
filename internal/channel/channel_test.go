@@ -254,13 +254,16 @@ func TestTrustKey(t *testing.T) {
 		}
 		lsign := f.Index("sudo pacman-key --lsign-key ABCDEF0123456789ABCDEF0123456789ABCDEF01")
 		add := f.Index("sudo pacman-key --add ")
+		if known {
+			if add >= 0 || lsign >= 0 {
+				t.Errorf("known key must be a no-op; got %q", f.Lines())
+			}
+			continue
+		}
 		if lsign < 0 {
-			t.Errorf("known=%v: never signed locally: %q", known, f.Lines())
+			t.Errorf("unknown key: never signed locally: %q", f.Lines())
 		}
-		if known && add >= 0 {
-			t.Error("added a key pacman already has")
-		}
-		if !known && (add < 0 || add > lsign || !strings.HasPrefix(added, "-----BEGIN")) {
+		if add < 0 || add > lsign || !strings.HasPrefix(added, "-----BEGIN") {
 			t.Errorf("unknown key: added %q at %d, lsign at %d", added, add, lsign)
 		}
 	}

@@ -34,6 +34,11 @@ func C(name string, args ...string) Cmd { return Cmd{Name: name, Args: args} }
 // Root is shorthand for a Cmd run through sudo.
 func Root(name string, args ...string) Cmd { return Cmd{Name: name, Args: args, Sudo: true} }
 
+// PacmanTx is a pacman transaction through omarchy-update-pacman, which runs
+// pacman under a systemd scope so a mid-transaction systemd upgrade cannot
+// SIGKILL it (Hamr#768). Queries (-Q*) stay plain pacman.
+func PacmanTx(args ...string) Cmd { return C("omarchy-update-pacman", args...) }
+
 // String is the command line as a shell would show it, with "sudo" in front
 // when it runs as root. Tests match on it.
 func (c Cmd) String() string {

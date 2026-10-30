@@ -187,7 +187,7 @@ func (p Pacman) Remove(ctx context.Context, s *Set) error {
 	if len(gone) == 0 {
 		return nil
 	}
-	return p.Run.Run(ctx, run.Root("pacman", append([]string{"-R", "--noconfirm"}, gone...)...))
+	return p.Run.Run(ctx, run.PacmanTx(append([]string{"-R", "--noconfirm"}, gone...)...))
 }
 
 // Mark marks the declared packages that are installed only as dependencies
@@ -209,7 +209,7 @@ func (p Pacman) Mark(ctx context.Context, s *Set) error {
 		return nil
 	}
 	sort.Strings(deps)
-	_, err = p.Run.Output(ctx, run.Root("pacman", append([]string{"-D", "--asexplicit"}, deps...)...))
+	_, err = p.Run.Output(ctx, run.PacmanTx(append([]string{"-D", "--asexplicit"}, deps...)...))
 	return err
 }
 
@@ -224,7 +224,7 @@ func (p Pacman) Install(ctx context.Context, s *Set) error {
 	}
 	missing := func(n string) bool { return !installed[n] }
 	if need := filter(s.Repo, missing); len(need) > 0 {
-		if err := p.Run.Run(ctx, run.Root("pacman", append([]string{"-S", "--needed", "--noconfirm"}, need...)...)); err != nil {
+		if err := p.Run.Run(ctx, run.PacmanTx(append([]string{"-S", "--needed", "--noconfirm"}, need...)...)); err != nil {
 			return err
 		}
 	}

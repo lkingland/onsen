@@ -545,6 +545,18 @@ func (u *Updater) upstreamChanges(ctx context.Context, before string) {
 
 // channelStep is step 4.
 func (u *Updater) channelStep(ctx context.Context) error {
+	change, err := u.wouldChange(ctx)
+	if err != nil {
+		return err
+	}
+	if change {
+		// Snapshot before any root write so a pre-update snapper boot
+		// undoes channel/package changes too (Hamr#768).
+		u.say("Taking a snapshot before changing the channel and packages.")
+		if err := u.Run.Run(ctx, run.Root("omarchy-snapshot", "create")); err != nil {
+			return fmt.Errorf("snapshot before channel step: %w", err)
+		}
+	}
 	ch := u.channel()
 	if err := ch.TrustKey(ctx, u.Key); err != nil {
 		return err
@@ -573,17 +585,73 @@ func (u *Updater) channelStep(ctx context.Context) error {
 		// moment; the full omarchy update runs straight after. --ask 4
 		// removes the stock omarchy and omarchy-settings these conflict with.
 		u.say("Installing our packages in place of the stock ones.")
-		if err := u.Run.Run(ctx, run.Root("pacman", "-Sy")); err != nil {
+		if err := u.Run.Run(ctx, run.PacmanTx("-Sy")); err != nil {
 			return err
 		}
 		args := append([]string{"-S", "--needed", "--noconfirm", "--ask", "4"}, u.ours()...)
-		if err := u.Run.Run(ctx, run.Root("pacman", args...)); err != nil {
+		if err := u.Run.Run(ctx, run.PacmanTx(args...)); err != nil {
 			return err
 		}
 	}
 	// Before the update: its orphan sweep would otherwise take a declared
 	// package that is only a dependency (neovim, once omarchy-nvim is gone).
 	return u.pacman().Mark(ctx, set)
+}
+
+// wouldChange reports whether channelStep would write root state (Hamr#768).
+// Read-only aside from the sudo pacman-key --list-keys probe inside KeyTrusted.
+func (u *Updater) wouldChange(ctx context.Context) (bool, error) {
+	ch := u.channel()
+	trusted, err := ch.KeyTrusted(ctx, u.Key)
+	if err != nil {
+		return false, err
+	}
+	if !trusted {
+		return true, nil
+	}
+	listed, err := ch.Listed()
+	if err != nil {
+		return false, err
+	}
+	if !listed {
+		return true, nil
+	}
+	data, err := os.ReadFile(ch.Conf)
+	if err != nil {
+		return false, err
+	}
+	if channel.Reorder(string(data), ch.Repo) != string(data) {
+		return true, nil
+	}
+	set, err := u.declared()
+	if err != nil {
+		return false, err
+	}
+	installed, err := u.pacman().Installed(ctx)
+	if err != nil {
+		return false, err
+	}
+	for _, n := range set.Remove {
+		if installed[n] {
+			return true, nil
+		}
+	}
+	b := u.build()
+	for _, pkg := range b.Packages {
+		if !installed[pkg] {
+			return true, nil
+		}
+	}
+	explicit, err := u.pacman().Explicit(ctx)
+	if err != nil {
+		return false, err
+	}
+	for _, n := range append(append(append([]string{}, set.Repo...), set.AUR...), set.Local...) {
+		if installed[n] && !explicit[n] {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // starterLeftovers clears the way for removing stock omarchy-nvim, the
@@ -694,7 +762,7 @@ func (u *Updater) confirmOurs(ctx context.Context, version string) error {
 		return err
 	}
 	if changed {
-		if err := u.Run.Run(ctx, run.Root("pacman", "-Sy")); err != nil {
+		if err := u.Run.Run(ctx, run.PacmanTx("-Sy")); err != nil {
 			return err
 		}
 	}
@@ -711,7 +779,7 @@ func (u *Updater) confirmOurs(ctx context.Context, version string) error {
 		if installed(pkg) != want {
 			u.say("Reinstalling our packages from [%s].", u.RepoName)
 			args := append([]string{"-S", "--noconfirm", "--ask", "4"}, u.ours()...)
-			if err := u.Run.Run(ctx, run.Root("pacman", args...)); err != nil {
+			if err := u.Run.Run(ctx, run.PacmanTx(args...)); err != nil {
 				return err
 			}
 			break

@@ -244,6 +244,10 @@ func (m *machine) handle(c run.Cmd) (string, error) {
 		return m.pacmanQuery(a)
 	case c.Sudo && c.Name == "pacman":
 		return "", m.pacmanChange(a)
+	case c.Name == "omarchy-update-pacman":
+		return "", m.pacmanChange(a)
+	case c.Sudo && c.Name == "omarchy-snapshot":
+		return "", nil
 	case c.Name == "yay":
 		for _, p := range a[3:] {
 			m.pkgs[p] = true
@@ -463,13 +467,13 @@ func TestFreshInstallRunsEveryStepInOrder(t *testing.T) {
 		"jj -R "+m.cfg.Fork+" git fetch --remote upstream",
 		"jj -R "+m.cfg.Fork+" --ignore-immutable rebase -b master -d quattro@upstream",
 		"git -C "+m.cfg.PKGBUILDs+" pull --ff-only --quiet",
-		"sudo pacman-key --lsign-key FPR",
-		"sudo pacman -R --noconfirm omarchy-nvim",
-		"sudo pacman -S --needed --noconfirm --ask 4 onsen/omarchy-settings-dev onsen/omarchy-dev",
-		"sudo pacman -D --asexplicit neovim",
+		"sudo omarchy-snapshot create",
+		"omarchy-update-pacman -R --noconfirm omarchy-nvim",
+		"omarchy-update-pacman -S --needed --noconfirm --ask 4 onsen/omarchy-settings-dev onsen/omarchy-dev",
+		"omarchy-update-pacman -D --asexplicit neovim",
 		"omarchy-update -y",
-		"sudo pacman -Sy",
-		"sudo pacman -S --needed --noconfirm nnn",
+		"omarchy-update-pacman -Sy",
+		"omarchy-update-pacman -S --needed --noconfirm nnn",
 		"yay -S --needed --noconfirm bat-extras",
 		"install -m 600 "+m.cfg.Identity+tailscale+" "+tailscale,
 		"systemctl --user enable --now syncthing.service",
@@ -487,7 +491,7 @@ func TestFreshInstallRunsEveryStepInOrder(t *testing.T) {
 	if conf, _ := os.ReadFile(m.cfg.PacmanConf); strings.Index(string(conf), "[onsen]") > strings.Index(string(conf), "[omarchy]") {
 		t.Errorf("[onsen] is not first after the update:\n%s", conf)
 	}
-	if sy := f.Matching("sudo pacman -Sy"); len(sy) != 2 {
+	if sy := f.Matching("omarchy-update-pacman -Sy"); len(sy) != 2 {
 		t.Errorf("pacman -Sy ran %d times; want once for our install, once after the reorder", len(sy))
 	}
 	if !m.pendingDuringUpdate {
@@ -632,7 +636,7 @@ func TestPendingRunIsFinishedFirst(t *testing.T) {
 	if finish < 0 || !(finish < installs && installs < copies && copies < services && services < check) {
 		t.Errorf("not finished first:\n%s", o)
 	}
-	if f := m.f.Index("sudo pacman -S --needed --noconfirm nnn"); f < 0 || f > m.f.Index("jj -R") {
+	if f := m.f.Index("omarchy-update-pacman -S --needed --noconfirm nnn"); f < 0 || f > m.f.Index("jj -R") {
 		t.Error("the declared package was not installed before the run went on")
 	}
 	if got, _ := os.ReadFile(filepath.Join(m.cfg.Home, ".config/tmux/tmux.conf")); string(got) != "edition v2\n" {
@@ -715,7 +719,7 @@ func TestOursComeBackAfterTheUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v\n%s", err, out(u))
 	}
-	before(t, m.f, "omarchy-update -y", "sudo pacman -Sy", "sudo pacman -S --noconfirm --ask 4 onsen/omarchy-settings-dev onsen/omarchy-dev")
+	before(t, m.f, "omarchy-update -y", "omarchy-update-pacman -Sy", "omarchy-update-pacman -S --noconfirm --ask 4 onsen/omarchy-settings-dev onsen/omarchy-dev")
 }
 
 func TestWrongVersionStopsBeforeConfig(t *testing.T) {
@@ -892,7 +896,7 @@ func TestBrokenDeclaredPackageDoesNotWedge(t *testing.T) {
 	delete(m.pkgs, "nnn")
 	inner := m.f.Handle
 	m.f.Handle = func(c run.Cmd) (string, error) {
-		if c.String() == "sudo pacman -S --needed --noconfirm nnn" {
+		if c.String() == "omarchy-update-pacman -S --needed --noconfirm nnn" {
 			return "", errors.New("target not found: nnn")
 		}
 		return inner(c)
@@ -920,7 +924,7 @@ func TestResumeConfirmsOursBeforeCopyingConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v\n%s", err, out(u))
 	}
-	if r, f := m.f.Index("sudo pacman -S --noconfirm --ask 4 onsen/"), m.f.Index("jj -R"); r < 0 || r > f {
+	if r, f := m.f.Index("omarchy-update-pacman -S --noconfirm --ask 4 onsen/"), m.f.Index("jj -R"); r < 0 || r > f {
 		t.Errorf("ours were not reinstalled before the run went on: %q", m.f.Lines())
 	}
 
@@ -1134,5 +1138,99 @@ func TestSudoKeptFresh(t *testing.T) {
 	}
 	if n := len(m.f.Matching("sudo -n true")); n < 2 {
 		t.Errorf("sudo refreshed %d time(s) during a slow run", n)
+	}
+}
+
+// Hamr#768: when step 4 would change root state, the snapshot is the first
+// root write (after the read-only pacman-key --list-keys probe); a failing
+// snapshot stops before any further root write.
+func TestChannelStepSnapshotsBeforeRootWrites(t *testing.T) {
+	m := newMachine(t)
+	m.pkgs["omarchy-nvim"] = true
+	base := m.f.Handle
+	m.f.Handle = func(c run.Cmd) (string, error) {
+		if c.Sudo && c.Name == "omarchy-snapshot" {
+			return "", nil
+		}
+		return base(c)
+	}
+	u := m.updater()
+	if err := u.channelStep(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	firstWrite := ""
+	for _, line := range m.f.Lines() {
+		if strings.HasPrefix(line, "sudo pacman-key --list-keys") {
+			continue
+		}
+		if strings.HasPrefix(line, "sudo ") || strings.HasPrefix(line, "omarchy-update-pacman") {
+			firstWrite = line
+			break
+		}
+	}
+	if firstWrite != "sudo omarchy-snapshot create" {
+		t.Fatalf("first root write is %q, want snapshot; ran %q", firstWrite, m.f.Lines())
+	}
+
+	m2 := newMachine(t)
+	m2.pkgs["omarchy-nvim"] = true
+	base2 := m2.f.Handle
+	m2.f.Handle = func(c run.Cmd) (string, error) {
+		if c.Sudo && c.Name == "omarchy-snapshot" {
+			return "", errors.New("snapper failed")
+		}
+		return base2(c)
+	}
+	if err := m2.updater().channelStep(context.Background()); err == nil {
+		t.Fatal("want snapshot failure")
+	}
+	for _, line := range m2.f.Lines() {
+		if strings.HasPrefix(line, "omarchy-update-pacman") || strings.Contains(line, "pacman-key --add") || strings.Contains(line, "pacman-key --lsign") {
+			t.Fatalf("root write after failed snapshot: %q in %q", line, m2.f.Lines())
+		}
+	}
+}
+
+// Hamr#768: settled channel step takes no snapshot and writes nothing as root
+// (aside from the read-only pacman-key --list-keys probe).
+func TestChannelStepSettledIsQuiet(t *testing.T) {
+	m := newMachine(t)
+	// Default machine: [onsen] first, key listed, ours installed, no "-" pkgs,
+	// neovim explicit. Clear omarchy-nvim if present.
+	delete(m.pkgs, "omarchy-nvim")
+	u := m.updater()
+	n := len(m.f.Calls)
+	if err := u.channelStep(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	for _, line := range m.f.Lines()[n:] {
+		if line == "sudo omarchy-snapshot create" {
+			t.Fatalf("snapshot on settled run: %q", m.f.Lines()[n:])
+		}
+		if strings.HasPrefix(line, "omarchy-update-pacman") {
+			t.Fatalf("pacman tx on settled run: %q", m.f.Lines()[n:])
+		}
+		if strings.HasPrefix(line, "sudo ") && !strings.HasPrefix(line, "sudo pacman-key --list-keys") {
+			t.Fatalf("root write on settled run: %q in %q", line, m.f.Lines()[n:])
+		}
+	}
+}
+
+// Hamr#768: every pacman transaction goes through omarchy-update-pacman.
+func TestNoDirectPacmanTransactions(t *testing.T) {
+	m := newMachine(t)
+	m.pkgs["omarchy-nvim"] = true
+	delete(m.pkgs, "nnn") // force a declared install in finish
+	u, err := m.update(false)
+	if err != nil {
+		t.Fatalf("%v\n%s%s", err, out(u), errs(u))
+	}
+	for _, line := range m.f.Lines() {
+		if strings.HasPrefix(line, "sudo pacman -") {
+			t.Fatalf("direct pacman transaction %q; want omarchy-update-pacman", line)
+		}
+	}
+	if m.f.Index("omarchy-update-pacman -R") < 0 {
+		t.Fatalf("Remove did not use omarchy-update-pacman: %q", m.f.Matching("omarchy-update-pacman"))
 	}
 }

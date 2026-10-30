@@ -148,43 +148,59 @@ func (c Channel) Switch(ctx context.Context) error {
 	return nil
 }
 
-// TrustKey adds the signing key to pacman's keyring when it is missing, and
-// signs it locally on every run: local signing is idempotent, and an
-// interrupted first run may have added the key without trusting it. key is
-// the key id as gpg knows it (a trailing "!" is dropped).
-func (c Channel) TrustKey(ctx context.Context, key string) error {
+// fingerprint looks up the primary fingerprint for key in the user keyring.
+func (c Channel) fingerprint(ctx context.Context, key string) (string, error) {
 	out, err := c.Run.Output(ctx, run.C("gpg", "--with-colons", "--list-keys", strings.TrimSuffix(key, "!")))
+	if err != nil {
+		return "", err
+	}
+	for _, line := range run.Lines(out) {
+		if f := strings.Split(line, ":"); f[0] == "fpr" && len(f) > 9 {
+			return f[9], nil
+		}
+	}
+	return "", fmt.Errorf("no public key for %s in this keyring", key)
+}
+
+// KeyTrusted reports whether pacman's keyring already carries key (Hamr#768
+// wouldChange). Read-only aside from the sudo list-keys probe.
+func (c Channel) KeyTrusted(ctx context.Context, key string) (bool, error) {
+	fpr, err := c.fingerprint(ctx, key)
+	if err != nil {
+		return false, err
+	}
+	_, err = c.Run.Output(ctx, run.Cmd{Name: "pacman-key", Args: []string{"--list-keys", fpr}, Sudo: true, Quiet: true})
+	return err == nil, nil
+}
+
+// TrustKey adds the signing key to pacman's keyring when it is missing and
+// signs it locally. When the key is already listed, it is a no-op (Hamr#768:
+// a settled channel step must not write root). key is the key id as gpg
+// knows it (a trailing "!" is dropped).
+func (c Channel) TrustKey(ctx context.Context, key string) error {
+	fpr, err := c.fingerprint(ctx, key)
 	if err != nil {
 		return err
 	}
-	fpr := ""
-	for _, line := range run.Lines(out) {
-		if f := strings.Split(line, ":"); f[0] == "fpr" && len(f) > 9 {
-			fpr = f[9]
-			break
-		}
+	if _, err := c.Run.Output(ctx, run.Cmd{Name: "pacman-key", Args: []string{"--list-keys", fpr}, Sudo: true, Quiet: true}); err == nil {
+		return nil
 	}
-	if fpr == "" {
-		return fmt.Errorf("no public key for %s in this keyring", key)
+	c.Say("Adding the signing key to pacman's keyring.")
+	armored, err := c.Run.Output(ctx, run.C("gpg", "--export", "--armor", fpr))
+	if err != nil {
+		return err
 	}
-	if _, err := c.Run.Output(ctx, run.Cmd{Name: "pacman-key", Args: []string{"--list-keys", fpr}, Sudo: true, Quiet: true}); err != nil {
-		c.Say("Adding the signing key to pacman's keyring.")
-		armored, err := c.Run.Output(ctx, run.C("gpg", "--export", "--armor", fpr))
-		if err != nil {
-			return err
-		}
-		dir, err := os.MkdirTemp("", "onsen-key.")
-		if err != nil {
-			return err
-		}
-		defer os.RemoveAll(dir)
-		path := filepath.Join(dir, "key.asc")
-		if err := os.WriteFile(path, []byte(armored), 0o644); err != nil {
-			return err
-		}
-		if err := c.Run.Run(ctx, run.Root("pacman-key", "--add", path)); err != nil {
-			return err
-		}
+	dir, err := os.MkdirTemp("", "onsen-key.")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(dir)
+	path := filepath.Join(dir, "key.asc")
+	if err := os.WriteFile(path, []byte(armored), 0o644); err != nil {
+		return err
+	}
+	if err := c.Run.Run(ctx, run.Root("pacman-key", "--add", path)); err != nil {
+		return err
 	}
 	_, err = c.Run.Output(ctx, run.Root("pacman-key", "--lsign-key", fpr))
 	return err

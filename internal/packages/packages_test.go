@@ -141,7 +141,7 @@ func TestRemoveOnlyWhatIsInstalled(t *testing.T) {
 	if err := (Pacman{Run: f}).Remove(context.Background(), set(t)); err != nil {
 		t.Fatal(err)
 	}
-	if got := f.Matching("sudo pacman -R"); !reflect.DeepEqual(got, []string{"sudo pacman -R --noconfirm omarchy-nvim"}) {
+	if got := f.Matching("omarchy-update-pacman -R"); !reflect.DeepEqual(got, []string{"omarchy-update-pacman -R --noconfirm omarchy-nvim"}) {
 		t.Errorf("got %q", got)
 	}
 
@@ -149,7 +149,7 @@ func TestRemoveOnlyWhatIsInstalled(t *testing.T) {
 	if err := (Pacman{Run: f}).Remove(context.Background(), set(t)); err != nil {
 		t.Fatal(err)
 	}
-	if got := f.Matching("sudo pacman -R"); got != nil {
+	if got := f.Matching("omarchy-update-pacman -R"); got != nil {
 		t.Errorf("removed a package that is not installed: %q", got)
 	}
 }
@@ -165,7 +165,7 @@ func TestMarkOnlyDeclaredDependencies(t *testing.T) {
 	if err := (Pacman{Run: f}).Mark(context.Background(), set(t)); err != nil {
 		t.Fatal(err)
 	}
-	if got := f.Matching("sudo pacman -D"); !reflect.DeepEqual(got, []string{"sudo pacman -D --asexplicit bat-extras neovim"}) {
+	if got := f.Matching("omarchy-update-pacman -D"); !reflect.DeepEqual(got, []string{"omarchy-update-pacman -D --asexplicit bat-extras neovim"}) {
 		t.Errorf("got %q", got)
 	}
 }
@@ -177,7 +177,7 @@ func TestInstallMissingThenMark(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []string{
-		"sudo pacman -S --needed --noconfirm neovim",
+		"omarchy-update-pacman -S --needed --noconfirm neovim",
 		"yay -S --needed --noconfirm bat-extras",
 	}
 	var got []string
